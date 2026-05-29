@@ -195,3 +195,39 @@ F1 **93.3** (CI [89.2, 96.8]); recall 100%, 12 FPs. Headroom now ~7 pts.
 
 ### Curve so far (frozen Qwen3.5-4B, F1) — benchmark difficulty, model fixed
 v0 98.2 -> v1 96.2 -> v2 95.8 -> v3 93.3. Monotonic as designed.
+
+## 2026-05-29 — real HF data (real-v1)
+
+### Pipeline
+`data/it/fetch_real.py`: streams 4 HF sources, labels via metadata+regex, dedups (incl. vs
+synthetic), splits leakage-safe, emits data/real/{train,val,test,test_realistic,test_balanced}.
+Sources (700 each, 2800 total kept): ai4privacy/pii-masking-300k (pii_handling, entity-type
+gated), Tobi-Bueck/customer-support-tickets (support −, breach-tagged + incident-kw → vuln
++), AlicanKiraz0 CVE records (→ security_news), iamtarun python code (public_snippet −).
+secret_credential/infra_config/access_control/our-policy = synthetic-only (no clean source).
+`run_eval.py --data` now accepts comma-separated files (→ source slice).
+
+### Verification loop (Claude as non-Qwen judge, sampled)
+Caught a ~45% false-positive rate in the first support-positive rule (generic Security/
+Outage/Incident tags swept in outages, bug reports, security *inquiries*). Tightened to
+(security tag) AND (incident keyword) → re-verified clean. PII positives mostly OK (a few
+borderline from truncation); ai4privacy text reads artificially (distribution caveat).
+
+### Headline: combined eval (synthetic v3 test + real realistic, 12% pos), frozen model
+- synthetic F1 94.9 / spec 90.6
+- REAL F1 41.0 / spec 69.6  ← but decomposes:
+  - REAL CVE only: model flags 91/93 as TRIGGER (spec 2.2%)
+  - REAL excl. CVE: F1 76.9 / spec 93.8 (code 99 / ticket 98 / support 97% spec)
+- est. cost $0.0215 (210k tokens), placeholder price.
+
+### Reading (findings f010/f011)
+- Real eval immediately earned its keep: it exposed a LABELING BUG, not just model error.
+  I mapped CVE→security_news→negative, but the policy lists "vulnerability/incident details"
+  IN-SCOPE. The model agrees with the policy. 91 of 107 real FPs are CVEs. This also
+  contradicts synthetic cf_cve_advisory → the rubric is inconsistent and must be resolved.
+- Setting CVE aside, the synthetic→real gap is real but moderate: model transfers well to
+  real negatives; residual weakness is precision on PII prose (spec 74%). NOT a collapse.
+- Method note: "F1 41" is a slice artifact of one debatable label — always decompose before
+  concluding "the model is bad."
+
+### Next: resolve the CVE rubric, realign synthetic cf_cve_advisory, re-measure real.

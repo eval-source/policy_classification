@@ -18,8 +18,13 @@ docs/refs/*.pdf
 
 # transient eval prediction dumps (regenerable; overwritten each run)
 results/preds_*.jsonl
+results/preds_runs/
 
 # generated datasets: reproducible from the seeded generator, and they contain
 # secret-FORMAT strings (fake values) that trip GitHub push protection.
 # Reproduce with: python data/it/generate.py --variant v1 --seed 0
 data/it/*.jsonl
+
+# real data fetched from HF: not redistributable (licenses + may contain PII).
+# Reproduce with: python data/it/fetch_real.py
+data/real/

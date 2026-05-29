@@ -29,6 +29,11 @@
   .chip.mono,.chip.id { font-family:ui-monospace,Menlo,monospace; }
   .detail td { background:#13161c; padding:0; }
   .detailbox { padding:12px 16px; }
+  .subtabs { display:flex; gap:6px; margin:4px 0 10px; }
+  .subtab { padding:4px 12px; font-size:12px; border:1px solid #2b313c; border-radius:6px; background:var(--panel); color:var(--muted); cursor:pointer; }
+  .subtab.active { color:var(--fg); border-color:var(--acc); }
+  .excard { border:1px solid #232833; border-left:3px solid var(--muted); border-radius:6px; padding:8px 10px; margin:6px 0; }
+  .excard.ok { border-left-color:var(--pos); } .excard.bad { border-left-color:var(--neg); }
   .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
   .slice h4 { margin:0 0 6px; font-size:12px; color:var(--muted); text-transform:uppercase; }
   .slice table { font-size:12px; } .slice td,.slice th { border-bottom:1px solid #20252f; padding:4px 8px; }
@@ -102,6 +107,7 @@
       <div class="side">
         <label class="f">Domain</label><select id="fdomain"></select>
         <label class="f">Search text</label><input id="q" placeholder="substring…">
+        <label class="f">Source</label><select id="fsource"></select>
         <label class="f">Split</label><select id="fsplit"></select>
         <label class="f">Label</label><select id="flabel"><option value="">all</option><option value="1">positive (trigger)</option><option value="0">negative (pass)</option></select>
         <label class="f">Subcategory</label><select id="fsub"></select>
@@ -151,7 +157,7 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
 });
 
 /* ================= RESULTS ================= */
-let RROWS=[], sortK='iteration', sortDir=-1;
+let RROWS=[], RENDERED=[], sortK='iteration', sortDir=-1;
 async function loadResults() {
   const hist = await getJsonl('../results/history.jsonl');
   if (hist===null) { showErr('Could not load results/history.jsonl — serve over http (python viz/serve.py).'); return; }
@@ -161,7 +167,7 @@ async function loadResults() {
     system:s.name, n:s.n, precision:s.precision, recall:s.recall, f1:s.f1, accuracy:s.accuracy,
     f1_ci:s.f1_ci, tp:s.tp, fp:s.fp, fn:s.fn, tn:s.tn, unparsed:s.unparsed,
     by_subcategory:s.by_subcategory||{}, by_difficulty:s.by_difficulty||{}, by_hardening:s.by_hardening||{},
-    usage:s.usage||null, cost:(s.usage?s.usage.est_cost_usd:null),
+    usage:s.usage||null, cost:(s.usage?s.usage.est_cost_usd:null), preds_file:s.preds_file||null,
   })));
   $('hdrsub').textContent = `${hist.length} iterations · ${RROWS.length} runs`;
   renderResults();
@@ -185,18 +191,57 @@ function rdetail(r){
     <div class="hd">true +</div><div>TP ${r.tp}</div><div>FN ${r.fn}</div>
     <div class="hd">true −</div><div>FP ${r.fp}</div><div>TN ${r.tn}</div></div>
     <div style="color:var(--muted);font-size:12px;margin-top:6px">unparsed: ${r.unparsed} · F1 CI [${pct(r.f1_ci?.[0])}, ${pct(r.f1_ci?.[1])}]${r.usage&&r.usage.prompt_tokens?` · ${r.usage.prompt_tokens}+${r.usage.completion_tokens} tok · est $${(r.usage.est_cost_usd||0).toFixed(4)}${r.usage.price_confirmed===false?' (placeholder price)':''}`:''}</div></div>`;
-  return `<div class="detailbox"><div class="grid">${cm}${sliceTable('by hardening',r.by_hardening)}${sliceTable('by subcategory',r.by_subcategory)}${sliceTable('by difficulty',r.by_difficulty)}</div></div>`;
+  return `<div class="detailbox"><div class="grid">${cm}${sliceTable('by hardening',r.by_hardening)}${sliceTable('by subcategory',r.by_subcategory)}${sliceTable('by difficulty',r.by_difficulty)}</div>
+    <div id="ex-${r._i}" class="examples" style="margin-top:14px"></div></div>`;
 }
 function renderResults(){
   const rows=[...RROWS].sort((a,b)=>{let av=a[sortK],bv=b[sortK]; if(sortK==='cfg'){av=a.cfg.model;bv=b.cfg.model;} return typeof av==='number'?(av-bv)*sortDir:String(av).localeCompare(String(bv))*sortDir;});
+  rows.forEach((r,i)=>r._i=i); RENDERED=rows;
   $('rtb').innerHTML = rows.map((r,i)=>`
     <tr class="row" data-i="${i}"><td>${r.iteration}</td><td>${r.date}</td><td><span class="chip mono">${r.run_id}</span></td>
       <td>${r.system.length>34?r.system.slice(0,34)+'…':r.system}</td><td>${cfgChips(r.cfg,r.system)}</td><td class="note">${r.note}</td>
       <td class="num">${r.n}</td><td class="num">${pct(r.precision)}</td><td class="num">${pct(r.recall)}</td><td class="num f1">${pct(r.f1)}</td><td class="num">${pct(r.accuracy)}</td>
       <td class="num">${r.cost==null?'–':'$'+r.cost.toFixed(4)}</td></tr>
     <tr class="detail" data-d="${i}" style="display:none"><td colspan="12">${rdetail(r)}</td></tr>`).join('');
-  document.querySelectorAll('#rtb tr.row').forEach(tr=>tr.onclick=()=>{const d=document.querySelector(`#rtb tr.detail[data-d="${tr.dataset.i}"]`); d.style.display=d.style.display==='none'?'':'none';});
+  document.querySelectorAll('#rtb tr.row').forEach(tr=>tr.onclick=()=>{
+    const d=document.querySelector(`#rtb tr.detail[data-d="${tr.dataset.i}"]`);
+    const show=d.style.display==='none'; d.style.display=show?'':'none';
+    if(show) loadExamples(tr.dataset.i);
+  });
   drawTrend();
+}
+async function loadExamples(i){
+  const host=document.getElementById('ex-'+i); if(!host || host.dataset.loaded) return;
+  const r=RENDERED[i];
+  if(!r.preds_file){ host.innerHTML='<div class="sub">No per-example predictions for this run (predates the feature — re-run to populate).</div>'; host.dataset.loaded='1'; return; }
+  host.innerHTML='<div class="sub">loading examples…</div>';
+  const recs=await getJsonl('../'+r.preds_file);
+  if(recs===null){ host.innerHTML=`<div class="sub">preds file not found: ${r.preds_file}</div>`; return; }
+  host.dataset.loaded='1';
+  host._fail=recs.filter(x=>!x.correct); host._succ=recs.filter(x=>x.correct);
+  host.innerHTML=`<div class="subtabs">
+      <button class="subtab active" data-k="fail">✗ Failures (${host._fail.length})</button>
+      <button class="subtab" data-k="succ">✓ Successes (${host._succ.length})</button>
+    </div><div id="exlist-${i}"></div>`;
+  renderExamples(i,'fail');
+  host.querySelectorAll('.subtab').forEach(b=>b.onclick=()=>{
+    host.querySelectorAll('.subtab').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    renderExamples(i,b.dataset.k);
+  });
+}
+function renderExamples(i,k){
+  const host=document.getElementById('ex-'+i), list=(k==='fail'?host._fail:host._succ)||[];
+  const lab=v=>v===1?'TRIGGER':(v===0?'PASS':'?');
+  document.getElementById('exlist-'+i).innerHTML = (list.slice(0,200).map(x=>`
+    <div class="excard ${x.correct?'ok':'bad'}"><div class="chips">
+      <span class="chip ${x.label===1?'pos':'neg'}">truth ${lab(x.label)}</span>
+      <span class="chip ${x.pred===1?'pos':'neg'}">pred ${lab(x.pred)}</span>
+      <span class="chip ${x.source==='real'?'hard':'cot'}">${x.source}</span>
+      <span class="chip">${x.subcategory}</span>
+      ${x.hardening&&!['core','real'].includes(x.hardening)?`<span class="chip cot">${x.hardening}</span>`:''}
+      <span class="chip id">${x.id}</span>
+    </div><pre>${(x.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</pre></div>`).join('')
+    + (list.length>200?`<div class="sub">(showing first 200 of ${list.length})</div>`:'')) || '<div class="sub">none</div>';
 }
 function drawTrend(){
   const bySys={}; RROWS.forEach(r=>{(bySys[r.system]=bySys[r.system]||[]).push([r.iteration,r.f1]);});
@@ -222,14 +267,18 @@ async function loadDataset(){
 }
 async function loadDomain(domain){
   DROWS=[];
+  // synthetic splits for this domain
   for (const sp of ['train','val','test']){ const rows=await getJsonl(`../data/${domain}/${sp}.jsonl`); if(rows)rows.forEach(r=>{r.split=sp;DROWS.push(r);}); }
+  // real splits (IT domain) — tagged by their own `source` field; test_* are views, skip
+  for (const sp of ['train','val','test']){ const rows=await getJsonl(`../data/real/${sp}.jsonl`); if(rows)rows.forEach(r=>{r.split=sp;DROWS.push(r);}); }
   const uniq=k=>[...new Set(DROWS.map(r=>r[k]).filter(v=>v!=null))].sort();
-  dopts($('fsplit'),uniq('split')); dopts($('fsub'),uniq('subcategory')); dopts($('fhard'),uniq('hardening')); dopts($('fdiff'),uniq('difficulty')); dopts($('ffmt'),uniq('format'));
+  dopts($('fsource'),uniq('source')); dopts($('fsplit'),uniq('split')); dopts($('fsub'),uniq('subcategory'));
+  dopts($('fhard'),uniq('hardening')); dopts($('fdiff'),uniq('difficulty')); dopts($('ffmt'),uniq('format'));
   renderDataset();
 }
 function dopts(sel,vals){const cur=sel.value; sel.innerHTML=`<option value="">all</option>`+vals.map(v=>`<option ${v===cur?'selected':''}>${v}</option>`).join('');}
-function dfiltered(){const q=$('q').value.toLowerCase(),sp=$('fsplit').value,lb=$('flabel').value,su=$('fsub').value,hd=$('fhard').value,di=$('fdiff').value,fm=$('ffmt').value;
-  return DROWS.filter(r=>(!q||r.text.toLowerCase().includes(q))&&(!sp||r.split===sp)&&(lb===''||String(r.label)===lb)&&(!su||r.subcategory===su)&&(!hd||r.hardening===hd)&&(!di||r.difficulty===di)&&(!fm||r.format===fm));}
+function dfiltered(){const q=$('q').value.toLowerCase(),so=$('fsource').value,sp=$('fsplit').value,lb=$('flabel').value,su=$('fsub').value,hd=$('fhard').value,di=$('fdiff').value,fm=$('ffmt').value;
+  return DROWS.filter(r=>(!q||r.text.toLowerCase().includes(q))&&(!so||r.source===so)&&(!sp||r.split===sp)&&(lb===''||String(r.label)===lb)&&(!su||r.subcategory===su)&&(!hd||r.hardening===hd)&&(!di||r.difficulty===di)&&(!fm||r.format===fm));}
 function dbars(title,rows,key,stacked){const g={};rows.forEach(r=>{const k=r[key];g[k]=g[k]||{n:0,pos:0};g[k].n++;if(r.label===1)g[k].pos++;});const max=Math.max(1,...Object.values(g).map(v=>v.n));
   const items=Object.entries(g).sort((a,b)=>b[1].n-a[1].n).map(([k,v])=>{if(stacked){const pp=100*v.pos/v.n;return `<div class="bar"><span class="lab" title="${k}">${k}</span><div class="stacked"><div class="fill pos" style="width:${pp}%"></div><div class="fill neg" style="width:${100-pp}%"></div></div><span class="num">${v.pos}/${v.n-v.pos}</span></div>`;}return `<div class="bar"><span class="lab" title="${k}">${k}</span><div class="track"><div class="fill" style="width:${100*v.n/max}%"></div></div><span class="num">${v.n}</span></div>`;}).join('');
   return `<div class="stat"><h3>${title}</h3>${items}</div>`;}
@@ -237,13 +286,14 @@ function renderDataset(){const rows=dfiltered();
   $('hdrsub') && null;
   $('count').textContent=`${rows.length} / ${DROWS.length} rows shown · ${DROWS.filter(r=>r.label===1).length} pos / ${DROWS.filter(r=>r.label===0).length} neg`;
   $('list').innerHTML=rows.slice(0,1000).map(r=>`<div class="card"><div class="chips">
-    <span class="chip ${r.label===1?'pos':'neg'}">${r.label===1?'TRIGGER':'PASS'}</span><span class="chip">${r.subcategory}</span>
-    <span class="chip ${r.difficulty==='hard'?'hard':''}">${r.difficulty}</span>${r.hardening&&r.hardening!=='core'?`<span class="chip cot">${r.hardening}</span>`:''}<span class="chip">${r.format}</span><span class="chip">${r.split}</span>
-    <span class="chip id">${r.id}</span><span class="chip id">${r.seed_id}</span></div>
+    <span class="chip ${r.label===1?'pos':'neg'}">${r.label===1?'TRIGGER':'PASS'}</span>
+    <span class="chip ${r.source==='real'?'hard':'cot'}">${r.source}</span><span class="chip">${r.subcategory}</span>
+    <span class="chip ${r.difficulty==='hard'?'hard':''}">${r.difficulty}</span>${r.hardening&&!['core','real'].includes(r.hardening)?`<span class="chip cot">${r.hardening}</span>`:''}<span class="chip">${r.format}</span><span class="chip">${r.split}</span>
+    <span class="chip id">${r.id}</span>${r.hf_dataset?`<span class="chip id">${r.hf_dataset.split('/').pop()}</span>`:''}</div>
     <pre>${r.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</pre></div>`).join('')+(rows.length>1000?'<div class="count">(first 1000)</div>':'');
-  $('stats').innerHTML=dbars('By hardening (pos/neg)',rows,'hardening',true)+dbars('By subcategory (pos/neg)',rows,'subcategory',true)+dbars('By difficulty (pos/neg)',rows,'difficulty',true)+dbars('By format',rows,'format',false)+dbars('By split',rows,'split',false);
+  $('stats').innerHTML=dbars('By source (pos/neg)',rows,'source',true)+dbars('By subcategory (pos/neg)',rows,'subcategory',true)+dbars('By hardening (pos/neg)',rows,'hardening',true)+dbars('By format',rows,'format',false)+dbars('By split',rows,'split',false);
 }
-['q','fsplit','flabel','fsub','fhard','fdiff','ffmt'].forEach(id=>$(id).addEventListener('input',renderDataset));
+['q','fsource','fsplit','flabel','fsub','fhard','fdiff','ffmt'].forEach(id=>$(id).addEventListener('input',renderDataset));
 $('fdomain').addEventListener('change',()=>loadDomain($('fdomain').value));
 
 /* ================= VERSIONS ================= */

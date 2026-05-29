@@ -234,7 +234,12 @@ def main():
     ap.add_argument("--note", default="", help="human label for this iteration")
     args = ap.parse_args()
 
-    rows = [json.loads(l) for l in open(args.data)]
+    # --data accepts one or more comma-separated files (rows keep their own `source` field,
+    # so a combined run yields a synthetic-vs-real slice).
+    rows = []
+    for path in args.data.split(","):
+        path = path.strip()
+        rows.extend(json.loads(l) for l in open(path) if l.strip())
     if args.max:
         rows = rows[: args.max]
     y_true = [r["label"] for r in rows]
@@ -244,14 +249,15 @@ def main():
         args.max_tokens = 16
 
     Path(args.out).mkdir(parents=True, exist_ok=True)
+    iteration, run_id, now, config = make_run_meta(args, len(rows))
     summaries = []
 
     if args.mode in ("regex", "both"):
         preds, raws = run_regex(rows)
         s = print_report("REGEX baseline", rows, y_true, preds, raws)
         s["usage"] = dict(prompt_tokens=0, completion_tokens=0, est_cost_usd=0.0)
+        s["preds_file"] = _dump(args.out, "regex", run_id, rows, y_true, preds, raws)
         summaries.append(s)
-        _dump(args.out, "regex", rows, y_true, preds, raws)
 
     if args.mode in ("model", "both"):
         tag = f"model{'_cot' if args.cot else ''}"
@@ -264,60 +270,75 @@ def main():
         label = f"MODEL {args.model}{' +CoT' if args.cot else ''}"
         s = print_report(label, rows, y_true, preds, raws)
         s["usage"] = usage
+        s["preds_file"] = _dump(args.out, tag, run_id, rows, y_true, preds, raws)
         summaries.append(s)
         tok_total = usage["prompt_tokens"] + usage["completion_tokens"]
         print(f"  Tokens: {usage['prompt_tokens']} prompt + {usage['completion_tokens']} completion "
               f"= {tok_total}  |  est. cost ${cost:.4f}{'' if confirmed else ' (PLACEHOLDER price)'}")
-        _dump(args.out, tag, rows, y_true, preds, raws)
 
     with open(Path(args.out) / "summary.json", "w") as f:
         json.dump(summaries, f, indent=2)
     print(f"\nWrote summary -> {args.out}/summary.json")
 
-    append_history(args, rows, summaries)
+    append_history(args, iteration, run_id, now, config, summaries)
 
 
-def append_history(args, rows, summaries):
-    """Append this invocation as one iteration to results/history.jsonl."""
+def make_run_meta(args, n_rows):
     hist_path = Path(args.out) / "history.jsonl"
-    prev = []
-    if hist_path.exists():
-        prev = [json.loads(l) for l in hist_path.open() if l.strip()]
+    prev = [json.loads(l) for l in hist_path.open() if l.strip()] if hist_path.exists() else []
     iteration = len(prev) + 1
-
     now = datetime.datetime.now()
     config = dict(
         model=args.model, mode=args.mode, cot=args.cot,
         temperature=args.temperature, max_tokens=args.max_tokens,
-        data=args.data, n=len(rows), concurrency=args.concurrency,
+        data=args.data, n=n_rows, concurrency=args.concurrency,
     )
     run_id = "it{:03d}-{}-{}".format(
         iteration, now.strftime("%Y%m%d_%H%M%S"),
         hashlib.sha1(json.dumps(config, sort_keys=True).encode()).hexdigest()[:6],
     )
+    return iteration, run_id, now, config
+
+
+def append_history(args, iteration, run_id, now, config, summaries):
+    """Append this invocation as one iteration to results/history.jsonl."""
+    hist_path = Path(args.out) / "history.jsonl"
     record = dict(
-        iteration=iteration,
-        run_id=run_id,
+        iteration=iteration, run_id=run_id,
         timestamp=now.isoformat(timespec="seconds"),
         date=now.strftime("%Y-%m-%d %H:%M"),
-        note=args.note,
-        config=config,
-        systems=summaries,
+        note=args.note, config=config, systems=summaries,
     )
     with hist_path.open("a") as f:
         f.write(json.dumps(record) + "\n")
     print(f"Logged iteration #{iteration} ({run_id}) -> {hist_path}")
-    print("View live at viz/results.html (run `python viz/serve.py` if not already serving)")
+    print("View live at viz/index.html (run `python viz/serve.py` if not already serving)")
 
 
-def _dump(out, tag, rows, y_true, y_pred, raws):
-    with open(Path(out) / f"preds_{tag}.jsonl", "w") as f:
+def _dump(out, tag, run_id, rows, y_true, y_pred, raws):
+    """Write per-run predictions (with correctness + source/slice fields) and return the
+    repo-relative path the dashboard can fetch. Also refresh the 'latest' preds_<tag> file."""
+    def records():
         for r, t, p, raw in zip(rows, y_true, y_pred, raws):
-            f.write(json.dumps({
-                "id": r["id"], "label": t, "pred": p, "raw": raw,
-                "subcategory": r["subcategory"], "difficulty": r["difficulty"],
-                "text": r["text"][:200],
-            }) + "\n")
+            yield {
+                "id": r["id"], "label": t, "pred": p,
+                "correct": (p == t),
+                "raw": raw, "source": r.get("source", "synthetic"),
+                "subcategory": r["subcategory"], "hardening": r.get("hardening", "core"),
+                "difficulty": r["difficulty"], "text": r["text"][:300],
+            }
+    # latest (overwritten) — handy for quick inspection
+    with open(Path(out) / f"preds_{tag}.jsonl", "w") as f:
+        for rec in records():
+            f.write(json.dumps(rec) + "\n")
+    # per-run (immutable, keyed by run_id) — powers the Results success/failure subtabs
+    runs_dir = Path(out) / "preds_runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    rel = f"{out}/preds_runs/{run_id}__{tag}.jsonl"
+    with open(Path(out) / "preds_runs" / f"{run_id}__{tag}.jsonl", "w") as f:
+        for rec in records():
+            f.write(json.dumps(rec) + "\n")
+    return rel
 
 
 if __name__ == "__main__":
