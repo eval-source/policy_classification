@@ -231,3 +231,32 @@ borderline from truncation); ai4privacy text reads artificially (distribution ca
   concluding "the model is bad."
 
 ### Next: resolve the CVE rubric, realign synthetic cf_cve_advisory, re-measure real.
+
+## 2026-05-29 — v4: casual register + typo noise (realism)
+
+### Why
+Real eval showed the model under-triggers on real positives (recall 80%) because real text is
+long/casual/messy while synthetic was short/clean. Closing that register gap.
+
+### What
+- `casual` hardening family: long lowercase Slack/Reddit/forum posts. Negatives = techie PSAs/
+  vents/war-stories that disclose nothing (e.g. the Claude-Code rate-limit PSA). Positives =
+  rambling messages that BURY a real secret/PII/access/incident. Openers/closers/slots give
+  combinatorial variety.
+- `inject_noise`: realistic typos (transpose/drop/double), contraction-stripping, dropped caps
+  on ~40% of rows. Protects structured tokens (keys, emails, URLs, numbers, ALLCAPS) so secrets
+  and regex labels stay valid. New `noisy` field + eval slice.
+- Global text-dedup before split → 0 identical texts across train/test (verified); also pruned
+  ~50 accidental template dups. cf pairs still 0 straddling. data/it now 1180 rows.
+- Eval slicer hardened to tolerate rows missing a key (real rows lack `noisy`).
+
+### Result (synthetic v4 + real, frozen model)
+- synthetic F1 92.8 (v3 was ~94.9 — casual+noise made it modestly harder)
+- **noisy slice: clean F1 95.6 / spec 89.4  vs  noisy F1 88.9 / spec 74.3** → ~15pt
+  specificity drop = typo brittleness (over-triggers on misspelled negatives; recall stays 100).
+- casual slice handled well in this test cut; real F1 unchanged at 70.
+
+### Reading (finding f013)
+Realism treatment did its job: surfaced a new, trainable weakness (typo robustness) and added
+the casual register real data has. Noise augmentation in TRAINING is now an obvious lever and
+should also help real-data specificity.

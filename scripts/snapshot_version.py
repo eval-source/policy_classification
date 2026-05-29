@@ -18,18 +18,21 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def dataset_stats(domain):
-    d = ROOT / "data" / domain
+def dataset_stats(domain, include_real=True):
+    """Counts over BOTH synthetic (data/<domain>) and real (data/real) when present,
+    with a by_source breakdown so the Versions tab reflects the full dataset."""
+    dirs = [("synthetic", ROOT / "data" / domain)]
+    if include_real:
+        dirs.append(("real", ROOT / "data" / "real"))
     splits, rows = {}, []
-    for sp in ("train", "val", "test"):
-        fp = d / f"{sp}.jsonl"
-        if not fp.exists():
-            continue
-        items = [json.loads(l) for l in fp.open() if l.strip()]
-        splits[sp] = len(items)
-        for r in items:
-            r["_split"] = sp
-        rows += items
+    for _src, d in dirs:
+        for sp in ("train", "val", "test"):
+            fp = d / f"{sp}.jsonl"
+            if not fp.exists():
+                continue
+            items = [json.loads(l) for l in fp.open() if l.strip()]
+            splits[sp] = splits.get(sp, 0) + len(items)
+            rows += items
     pos = sum(1 for r in rows if r["label"] == 1)
     return dict(
         domain=domain,
@@ -37,6 +40,7 @@ def dataset_stats(domain):
         pos=pos,
         neg=len(rows) - pos,
         splits=splits,
+        by_source=dict(Counter(r.get("source", "synthetic") for r in rows)),
         by_subcategory=dict(Counter(r["subcategory"] for r in rows)),
         by_difficulty=dict(Counter(r["difficulty"] for r in rows)),
         by_format=dict(Counter(r["format"] for r in rows)),

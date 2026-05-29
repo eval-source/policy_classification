@@ -168,8 +168,11 @@ def bootstrap_f1_ci(y_true, y_pred, n_boot=2000, seed=0):
 def slice_report(rows, y_true, y_pred, key):
     groups = defaultdict(lambda: ([], []))
     for r, t, p in zip(rows, y_true, y_pred):
-        groups[r[key]][0].append(t)
-        groups[r[key]][1].append(p)
+        g = r.get(key)
+        if g is None:  # row doesn't carry this slice key (e.g. real rows lack 'noisy')
+            continue
+        groups[g][0].append(t)
+        groups[g][1].append(p)
     out = {}
     for g, (yt, yp) in sorted(groups.items()):
         tp, fp, fn, tn = confusion(yt, yp)
@@ -199,7 +202,7 @@ def print_report(name, rows, y_true, y_pred, raws):
     print(f"  F1 95% CI: [{fmt_pct(lo)}, {fmt_pct(hi)}]")
     print(f"  Confusion: TP={tp} FP={fp} FN={fn} TN={tn}   unparsed={n_unparsed}")
 
-    for key in ("subcategory", "hardening", "difficulty", "format", "source"):
+    for key in ("subcategory", "hardening", "difficulty", "format", "source", "noisy"):
         if key not in rows[0]:
             continue
         print(f"\n  -- by {key} --")

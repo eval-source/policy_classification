@@ -344,7 +344,9 @@ async function loadVersions(){
       <div class="kv"><span>total rows</span><span>${ds.total} ${prev?deltaSpan(ds.total,pds?.total,false):''}</span></div>
       <div class="kv"><span>positive</span><span>${ds.pos} ${prev?deltaSpan(ds.pos,pds?.pos,false):''}</span></div>
       <div class="kv"><span>negative</span><span>${ds.neg} ${prev?deltaSpan(ds.neg,pds?.neg,false):''}</span></div>
+      ${ds.by_source?`<div class="kv"><span>source</span><span>${Object.entries(ds.by_source).map(([k,n])=>`${k} ${n}`).join(' · ')}</span></div>`:''}
       <div class="kv"><span>splits</span><span>${Object.entries(ds.splits).map(([k,n])=>`${k} ${n}`).join(' · ')}</span></div>
+      ${ds.by_source&&prev?.dataset?.by_source?`<h4 style="margin-top:10px">source counts</h4>${countDiff(ds.by_source,pds?.by_source)}`:''}
       <h4 style="margin-top:10px">subcategory counts</h4>${prev?countDiff(ds.by_subcategory,pds?.by_subcategory):Object.entries(ds.by_subcategory).map(([k,n])=>`<div class="deltarow"><span>${k}</span><span>${n}</span></div>`).join('')}
       ${prev?`<h4 style="margin-top:10px">difficulty counts</h4>${countDiff(ds.by_difficulty,pds?.by_difficulty)}`:''}`;
     html += `<div class="vcard">

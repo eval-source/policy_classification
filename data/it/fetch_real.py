@@ -216,7 +216,7 @@ def main():
             rows.append(dict(
                 id=f"real-{counter:05d}", seed_id=f"real-{name}-{counter}", domain="it",
                 text=text, label=lab, subcategory=sub, difficulty="natural",
-                hardening="real", pair_id=None, source="real", format=fmt,
+                hardening="real", pair_id=None, source="real", format=fmt, noisy=False,
                 label_source=lsrc, confidence=conf, hf_dataset=hf,
             ))
             counter += 1

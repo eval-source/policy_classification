@@ -32,6 +32,7 @@ import argparse
 import base64
 import json
 import random
+import re
 import string
 from pathlib import Path
 
@@ -506,10 +507,137 @@ def obfuscated(rng, fmt):
 
 
 # ---------------------------------------------------------------------------
+# HARD family 5 — casual long-form register (Slack / Reddit / forum)
+# Real traffic is long, lowercase, rambling, emoji-laden. Our other families are short and
+# clean, which is why the model under-triggers on real positives. These add that register.
+# Negatives are the key new hard case: techie war-stories / PSAs / vents that DISCLOSE NOTHING.
+# ---------------------------------------------------------------------------
+
+CASUAL_OPENERS = ["", "PSA: ", "TIL ", "psa for new folks: ", "rant: ", "lpt: ", "ok so ",
+                  "heads up — ", "minor win: ", "anyone else — ", "quick one: "]
+CASUAL_CLOSERS = ["", " anyway hth", " carry on", " 🤷", " lol", " that's the post", " ok back to work",
+                  " 🫠", " how's everyone's day", " (no i will not be taking questions)", " send help"]
+CASUAL_TOOLS = ["the VPN", "Claude Code", "the CI pipeline", "Slack", "the office wifi", "Zoom",
+                "the build", "Jira", "Okta SSO", "the staging env", "the printer", "our Notion"]
+
+
+def _wrap_casual(rng, body):
+    return (rng.choice(CASUAL_OPENERS) + body + rng.choice(CASUAL_CLOSERS)).strip()
+
+
+def casual_negative(rng):
+    tool = rng.choice(CASUAL_TOOLS)
+    dur = rng.choice(["20 min", "an hour", "like 3 hrs", "all afternoon", "two whole days", "a solid hour"])
+    body = rng.choice([
+        f"if your Claude Code rate limit won't reset after a plan upgrade, just re-login. spent way "
+        f"too long on this — the CLI caches your tier locally and keeps enforcing the OLD limit until "
+        f"you force a fresh auth. /logout then /login fixed it for me.",
+        f"you can cache node_modules in CI and it cut our build from {dur} to almost nothing. no idea "
+        f"why this isn't the default tbh.",
+        f"spent {dur} debugging a CORS error that turned out to be a missing trailing slash on the api "
+        f"url. i need a vacation.",
+        f"{tool} has been flaking out all week, third time today it dropped mid-call. not even mad "
+        f"anymore just impressed at the consistency.",
+        f"rotate your laptop password every quarter or IT will absolutely nag you. use a password "
+        f"manager, your future self will thank you.",
+        f"git reflog exists and it just saved my entire afternoon after i nuked a branch with a bad "
+        f"rebase. reflog is the real mvp.",
+        f"who keeps booking the big conf room for 1-person zoom calls 👀 asking for a friend (the "
+        f"friend is me, i could not find a room).",
+        f"is it just me or has {tool} been garbage all week. might just give up and reboot for the "
+        f"tenth time.",
+        f"finally migrated our docs to {tool} and honestly it was mostly copy-paste, took {dur}.",
+        f"reminder that turning it off and on again genuinely fixes {tool} like 80% of the time. "
+        f"i don't make the rules.",
+        f"my standup ran 40 min again today. at this point it's not a standup it's a sit-down.",
+        f"does anyone actually read the security awareness training or do we all just click through it",
+    ])
+    return _wrap_casual(rng, body), rng.choice(
+        ["support_chatter", "public_snippet", "security_advice", "abstract_question"])
+
+
+def casual_positive(rng):
+    kind = rng.randint(0, 4)
+    who = rng.choice(PEOPLE).lower()
+    if kind == 0:
+        body = (f"finally got the deploy green after a few hrs 😮‍💨 had to hardcode the staging token "
+                f"for now bc the vault setup is still borked: {github_token(rng)} — will move it before "
+                f"friday i promise")
+        sub = "secret_credential"
+    elif kind == 1:
+        body = (f"i think i just pasted the prod db password into the wrong channel?? it was "
+                f"{password(rng)}. how bad is this on a scale of 1 to update-my-resume, rotating now "
+                f"but wanted to flag")
+        sub = "secret_credential"
+    elif kind == 2:
+        body = (f"our customer csv export still has everyone's SSNs in plaintext, like {ssn(rng)}, found "
+                f"it digging thru an old ticket. that's not supposed to be there right? who do i tell")
+        sub = "pii_handling"
+    elif kind == 3:
+        body = (f"gave {who} root on the prod cluster real quick so they could tail logs during the "
+                f"outage, figured it was faster than a ticket. will revoke after, lmk if thats not ok")
+        sub = "access_control"
+    else:
+        body = ("welp. pushed our .env to a public github repo for like 10 whole minutes before i "
+                "noticed. rotating all the aws keys now, lesson learned")
+        sub = "vuln_incident"
+    return _wrap_casual(rng, body), sub
+
+
+# ---------------------------------------------------------------------------
+# Noise injection — realistic human typos/contractions/dropped caps.
+# Protects structured tokens (keys, emails, URLs, numbers) so secrets & labels stay intact.
+# ---------------------------------------------------------------------------
+
+CONTRACT = {"don't": "dont", "won't": "wont", "isn't": "isnt", "can't": "cant", "didn't": "didnt",
+            "it's": "its", "i'm": "im", "that's": "thats", "you're": "youre", "we're": "were",
+            "there's": "theres", "doesn't": "doesnt", "what's": "whats"}
+
+
+def _charop(w, rng):
+    if len(w) < 4:
+        return w
+    i = rng.randint(1, len(w) - 2)
+    op = rng.randint(0, 2)
+    if op == 0:
+        return w[:i] + w[i + 1] + w[i] + w[i + 2:]   # transpose
+    if op == 1:
+        return w[:i] + w[i + 1:]                      # drop a char
+    return w[:i] + w[i] + w[i:]                        # double a char
+
+
+def _protected(tok):
+    # leave secrets / emails / URLs / numbers / acronyms untouched
+    return (any(c.isdigit() for c in tok) or any(c in tok for c in "@:/\\_")
+            or len(tok) > 20 or sum(c.isupper() for c in tok) >= 3)
+
+
+def inject_noise(text, rng, rate=0.08):
+    out = []
+    for tok in re.split(r"(\s+)", text):
+        if not tok or tok.isspace():
+            out.append(tok); continue
+        low = tok.lower()
+        if low in CONTRACT and rng.random() < 0.6:
+            out.append(CONTRACT[low]); continue
+        if _protected(tok):
+            out.append(tok); continue
+        if tok.isalpha() and len(tok) >= 4 and rng.random() < rate:
+            out.append(_charop(tok, rng)); continue
+        out.append(tok)
+    s = "".join(out)
+    if s[:1].isupper() and rng.random() < 0.4:
+        s = s[0].lower() + s[1:]
+    if s.endswith(".") and rng.random() < 0.3:
+        s = s[:-1]
+    return s
+
+
+# ---------------------------------------------------------------------------
 # Build
 # ---------------------------------------------------------------------------
 
-def build(variant, seed, sizes):
+def build(variant, seed, sizes, noise_rate=0.0):
     rng = random.Random(seed)
     rows = []
     sid = [0]  # mutable counter
@@ -520,7 +648,7 @@ def build(variant, seed, sizes):
         rows.append(dict(
             id=f"it-{len(rows):05d}", seed_id=seed_id, domain="it", text=text, label=label,
             subcategory=subcat, difficulty=difficulty, hardening=hardening,
-            pair_id=pair_id, source="synthetic", format=fmt,
+            pair_id=pair_id, source="synthetic", format=fmt, noisy=False,
         ))
 
     # --- easy core ---
@@ -552,6 +680,28 @@ def build(variant, seed, sizes):
         for _ in range(sizes["obf"]):
             fmt = rng.choice(FORMATS); text, sub = obfuscated(rng, fmt)
             add(text, 1, sub, "hard", "obfuscation", fmt=fmt)
+        # --- casual long-form (Slack/Reddit register): ~half pos, half neg ---
+        for k in range(sizes["casual"]):
+            fmt = rng.choice(["slack", "reddit", "forum"])
+            if k % 2 == 0:
+                text, sub = casual_positive(rng); add(text, 1, sub, "hard", "casual", fmt=fmt)
+            else:
+                text, sub = casual_negative(rng); add(text, 0, sub, "hard", "casual", fmt=fmt)
+
+    # dedup identical texts (keeps splits leakage-safe: no same string in train AND test)
+    seen, deduped = set(), []
+    for r in rows:
+        if r["text"] not in seen:
+            seen.add(r["text"]); deduped.append(r)
+    rows = deduped
+
+    # --- realistic noise on a fraction of rows (secrets/numbers protected) ---
+    if noise_rate > 0:
+        idx = list(range(len(rows)))
+        rng.shuffle(idx)
+        for j in idx[: int(noise_rate * len(rows))]:
+            rows[j]["text"] = inject_noise(rows[j]["text"], rng)
+            rows[j]["noisy"] = True
 
     rng.shuffle(rows)
     return rows
@@ -582,13 +732,16 @@ def main():
     ap.add_argument("--intent", type=int, default=90)
     ap.add_argument("--nearbound", type=int, default=110)
     ap.add_argument("--obf", type=int, default=70)
+    ap.add_argument("--casual", type=int, default=140)
+    ap.add_argument("--noise-rate", type=float, default=0.4,
+                    help="fraction of rows to perturb with realistic typos (secrets protected)")
     args = ap.parse_args()
 
     easy = args.easy if args.easy is not None else (800 if args.variant == "v0" else 500)
     sizes = dict(easy=easy, cf_pairs=args.cf_pairs, intent=args.intent,
-                 nearbound=args.nearbound, obf=args.obf)
+                 nearbound=args.nearbound, obf=args.obf, casual=args.casual)
 
-    rows = build(args.variant, args.seed, sizes)
+    rows = build(args.variant, args.seed, sizes, noise_rate=args.noise_rate)
     splits = split_by_seed(rows, args.seed)
 
     out = Path(args.out)
@@ -612,6 +765,7 @@ def main():
     print("Hardening dist:", dist(rows, "hardening"))
     print("Difficulty dist:", dist(rows, "difficulty"))
     print("Subcategory dist:", dist(rows, "subcategory"))
+    print(f"Noisy rows: {sum(1 for r in rows if r['noisy'])} / {len(rows)}")
 
     # maintain data/domains.json
     domain = out.name
