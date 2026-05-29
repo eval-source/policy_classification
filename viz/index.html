@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Policy Classification — dashboard</title>
+<style>
+  :root { --bg:#0f1115; --panel:#181b22; --fg:#e6e6e6; --muted:#9aa4b2; --acc:#58a6ff; --pos:#3fb950; --neg:#f85149; --chip:#262b36; --warn:#d29922; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:14px 20px 0; border-bottom:1px solid #232833; position:sticky; top:0; background:var(--bg); z-index:10; }
+  .titlerow { display:flex; align-items:center; gap:16px; }
+  h1 { margin:0; font-size:18px; } .sub { color:var(--muted); font-size:13px; }
+  button { background:var(--panel); color:var(--fg); border:1px solid #2b313c; border-radius:6px; padding:6px 12px; font-size:13px; cursor:pointer; }
+  button:hover { border-color:var(--acc); }
+  .tabs { display:flex; gap:4px; margin-top:12px; }
+  .tab { padding:8px 16px; border:none; border-bottom:2px solid transparent; background:none; color:var(--muted); border-radius:0; }
+  .tab.active { color:var(--fg); border-bottom-color:var(--acc); }
+  .tab-section { display:none; } .tab-section.active { display:block; }
+  .main { padding:16px 20px; }
+  .err { color:var(--neg); padding:16px; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th,td { text-align:left; padding:8px 10px; border-bottom:1px solid #232833; white-space:nowrap; }
+  th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; cursor:pointer; }
+  tr.row { cursor:pointer; } tr.row:hover { background:#1c212b; }
+  .num { text-align:right; font-variant-numeric:tabular-nums; }
+  .f1 { font-weight:600; color:var(--acc); }
+  .chip { font-size:11px; padding:1px 7px; border-radius:9px; background:var(--chip); color:var(--muted); }
+  .chip.cot { background:rgba(88,166,255,.15); color:var(--acc); }
+  .chip.pos { background:rgba(63,185,80,.15); color:var(--pos); } .chip.neg { background:rgba(248,81,73,.15); color:var(--neg); }
+  .chip.hard { background:rgba(210,153,34,.18); color:var(--warn); }
+  .chip.mono,.chip.id { font-family:ui-monospace,Menlo,monospace; }
+  .detail td { background:#13161c; padding:0; }
+  .detailbox { padding:12px 16px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
+  .slice h4 { margin:0 0 6px; font-size:12px; color:var(--muted); text-transform:uppercase; }
+  .slice table { font-size:12px; } .slice td,.slice th { border-bottom:1px solid #20252f; padding:4px 8px; }
+  .cm { display:inline-grid; grid-template-columns:auto auto auto; gap:2px; font-size:12px; }
+  .cm div { padding:6px 12px; background:var(--chip); text-align:center; border-radius:3px; }
+  .cm .hd { background:transparent; color:var(--muted); }
+  .note { color:var(--warn); }
+  .trend svg { background:var(--panel); border:1px solid #232833; border-radius:8px; }
+  .legend { font-size:12px; color:var(--muted); margin-left:8px; }
+  /* dataset tab */
+  .dswrap { display:grid; grid-template-columns:300px 1fr; gap:0; }
+  .side { padding:0 20px 16px 0; border-right:1px solid #232833; }
+  .ds-main { padding:0 0 0 20px; }
+  .stat { margin-bottom:18px; } .stat h3 { margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .bar { display:flex; align-items:center; gap:8px; margin:3px 0; font-size:12px; }
+  .bar .lab { width:120px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bar .track { flex:1; background:var(--chip); border-radius:3px; height:14px; overflow:hidden; }
+  .bar .fill { height:100%; background:var(--acc); }
+  .stacked { display:flex; height:14px; border-radius:3px; overflow:hidden; flex:1; background:var(--chip); }
+  .fill.pos { background:var(--pos); } .fill.neg { background:var(--neg); }
+  .bar .num { width:64px; text-align:right; }
+  label.f { display:block; font-size:12px; color:var(--muted); margin:10px 0 3px; }
+  select, input { width:100%; background:var(--panel); color:var(--fg); border:1px solid #2b313c; border-radius:5px; padding:6px 8px; font-size:13px; }
+  .count { color:var(--muted); margin:0 0 12px; font-size:13px; }
+  .card { background:var(--panel); border:1px solid #232833; border-radius:8px; padding:12px 14px; margin-bottom:10px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; align-items:center; }
+  pre { margin:0; white-space:pre-wrap; word-break:break-word; font:12.5px/1.5 ui-monospace,Menlo,monospace; color:#d6deeb; }
+  /* versions tab */
+  .vcard { background:var(--panel); border:1px solid #232833; border-radius:10px; padding:16px 18px; margin-bottom:16px; }
+  .vhead { display:flex; align-items:baseline; gap:12px; margin-bottom:10px; }
+  .vlabel { font-size:16px; font-weight:600; }
+  .vcols { display:grid; grid-template-columns:1fr 1fr 1.1fr; gap:18px; }
+  .vcols h4 { margin:0 0 8px; font-size:12px; text-transform:uppercase; color:var(--muted); }
+  .kv { display:flex; justify-content:space-between; font-size:13px; padding:2px 0; border-bottom:1px solid #1c212b; }
+  .delta-up { color:var(--pos); } .delta-down { color:var(--neg); } .delta-zero { color:var(--muted); }
+  .deltarow { font-size:13px; padding:2px 0; display:flex; justify-content:space-between; }
+  .badge-new { font-size:10px; color:var(--acc); }
+</style></head>
+<body>
+<header>
+  <div class="titlerow">
+    <h1>Policy Classification</h1><div class="sub" id="hdrsub"></div>
+    <button onclick="loadAll()" style="margin-left:auto">↻ Reload</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="results">Results</button>
+    <button class="tab" data-tab="dataset">Dataset</button>
+    <button class="tab" data-tab="versions">Versions</button>
+    <button class="tab" data-tab="findings">Findings</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="err" id="err" style="display:none"></div>
+
+  <!-- ===================== RESULTS ===================== -->
+  <section class="tab-section active" id="tab-results">
+    <div class="trend" id="trend" style="margin:6px 0 22px"></div>
+    <table id="rtbl"><thead><tr>
+      <th data-k="iteration">#</th><th data-k="date">date</th><th data-k="run_id">run id</th>
+      <th data-k="system">system</th><th data-k="cfg">model / setup</th><th data-k="note">note</th>
+      <th data-k="n" class="num">n</th><th data-k="precision" class="num">P</th>
+      <th data-k="recall" class="num">R</th><th data-k="f1" class="num">F1</th><th data-k="accuracy" class="num">Acc</th>
+      <th data-k="cost" class="num">est $</th>
+    </tr></thead><tbody id="rtb"></tbody></table>
+  </section>
+
+  <!-- ===================== DATASET ===================== -->
+  <section class="tab-section" id="tab-dataset">
+    <div class="dswrap">
+      <div class="side">
+        <label class="f">Domain</label><select id="fdomain"></select>
+        <label class="f">Search text</label><input id="q" placeholder="substring…">
+        <label class="f">Split</label><select id="fsplit"></select>
+        <label class="f">Label</label><select id="flabel"><option value="">all</option><option value="1">positive (trigger)</option><option value="0">negative (pass)</option></select>
+        <label class="f">Subcategory</label><select id="fsub"></select>
+        <label class="f">Hardening</label><select id="fhard"></select>
+        <label class="f">Difficulty</label><select id="fdiff"></select>
+        <label class="f">Format</label><select id="ffmt"></select>
+        <div id="stats" style="margin-top:20px"></div>
+      </div>
+      <div class="ds-main"><div class="count" id="count"></div><div id="list"></div></div>
+    </div>
+  </section>
+
+  <!-- ===================== VERSIONS ===================== -->
+  <section class="tab-section" id="tab-versions">
+    <div class="sub" style="margin-bottom:12px">Each version snapshots the dataset + an eval iteration. Diffs compare to the previous version.</div>
+    <div id="versions"></div>
+  </section>
+
+  <!-- ===================== FINDINGS ===================== -->
+  <section class="tab-section" id="tab-findings">
+    <div class="sub" style="margin-bottom:12px">Observations + suggestions per iteration. Add with <code>python scripts/add_finding.py …</code></div>
+    <div id="findings"></div>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const pct = x => (x==null?'–':(100*x).toFixed(1));
+async function getJsonl(url) {
+  const res = await fetch(url + '?t=' + Date.now());
+  if (!res.ok) return null;
+  const t = await res.text();
+  return t.trim() ? t.trim().split('\n').filter(Boolean).map(JSON.parse) : [];
+}
+async function getJson(url) {
+  const res = await fetch(url + '?t=' + Date.now());
+  if (!res.ok) return null;
+  return res.json();
+}
+function showErr(msg) { $('err').style.display='block'; $('err').innerHTML = msg; }
+
+/* ---------------- tabs ---------------- */
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab-section').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active'); $('tab-'+t.dataset.tab).classList.add('active');
+});
+
+/* ================= RESULTS ================= */
+let RROWS=[], sortK='iteration', sortDir=-1;
+async function loadResults() {
+  const hist = await getJsonl('../results/history.jsonl');
+  if (hist===null) { showErr('Could not load results/history.jsonl — serve over http (python viz/serve.py).'); return; }
+  RROWS=[];
+  hist.forEach(it => (it.systems||[]).forEach(s => RROWS.push({
+    iteration:it.iteration, date:it.date, run_id:it.run_id, note:it.note||'', cfg:it.config,
+    system:s.name, n:s.n, precision:s.precision, recall:s.recall, f1:s.f1, accuracy:s.accuracy,
+    f1_ci:s.f1_ci, tp:s.tp, fp:s.fp, fn:s.fn, tn:s.tn, unparsed:s.unparsed,
+    by_subcategory:s.by_subcategory||{}, by_difficulty:s.by_difficulty||{}, by_hardening:s.by_hardening||{},
+    usage:s.usage||null, cost:(s.usage?s.usage.est_cost_usd:null),
+  })));
+  $('hdrsub').textContent = `${hist.length} iterations · ${RROWS.length} runs`;
+  renderResults();
+}
+function cfgChips(c, sys){
+  if (sys && sys.toLowerCase().includes('regex')) return `<span class="chip">regex (deterministic)</span>`;
+  return [`<span class="chip mono">${c.model.split('/').pop()}</span>`,
+    c.cot?`<span class="chip cot">CoT</span>`:`<span class="chip">no-CoT</span>`,
+    `<span class="chip">T=${c.temperature}</span>`,
+    `<span class="chip mono">${(c.data||'').split('/').slice(-2).join('/')}</span>`].join(' ');
+}
+function sliceTable(title, obj){
+  const ks=Object.keys(obj); if(!ks.length) return '';
+  const rows=ks.map(k=>{const m=obj[k]; const sp=(m.specificity==null)?'–':pct(m.specificity);
+    return `<tr><td>${k}</td><td class="num">${m.n}</td><td class="num">${m.n_pos??'–'}</td><td class="num">${pct(m.precision)}</td><td class="num">${pct(m.recall)}</td><td class="num">${pct(m.f1)}</td><td class="num">${sp}</td></tr>`;}).join('');
+  return `<div class="slice"><h4>${title}</h4><table><tr><th>slice</th><th class="num">n</th><th class="num">pos</th><th class="num">P</th><th class="num">R</th><th class="num">F1</th><th class="num">Spec</th></tr>${rows}</table></div>`;
+}
+function rdetail(r){
+  const cm=`<div class="slice"><h4>confusion</h4><div class="cm">
+    <div class="hd"></div><div class="hd">pred +</div><div class="hd">pred −</div>
+    <div class="hd">true +</div><div>TP ${r.tp}</div><div>FN ${r.fn}</div>
+    <div class="hd">true −</div><div>FP ${r.fp}</div><div>TN ${r.tn}</div></div>
+    <div style="color:var(--muted);font-size:12px;margin-top:6px">unparsed: ${r.unparsed} · F1 CI [${pct(r.f1_ci?.[0])}, ${pct(r.f1_ci?.[1])}]${r.usage&&r.usage.prompt_tokens?` · ${r.usage.prompt_tokens}+${r.usage.completion_tokens} tok · est $${(r.usage.est_cost_usd||0).toFixed(4)}${r.usage.price_confirmed===false?' (placeholder price)':''}`:''}</div></div>`;
+  return `<div class="detailbox"><div class="grid">${cm}${sliceTable('by hardening',r.by_hardening)}${sliceTable('by subcategory',r.by_subcategory)}${sliceTable('by difficulty',r.by_difficulty)}</div></div>`;
+}
+function renderResults(){
+  const rows=[...RROWS].sort((a,b)=>{let av=a[sortK],bv=b[sortK]; if(sortK==='cfg'){av=a.cfg.model;bv=b.cfg.model;} return typeof av==='number'?(av-bv)*sortDir:String(av).localeCompare(String(bv))*sortDir;});
+  $('rtb').innerHTML = rows.map((r,i)=>`
+    <tr class="row" data-i="${i}"><td>${r.iteration}</td><td>${r.date}</td><td><span class="chip mono">${r.run_id}</span></td>
+      <td>${r.system.length>34?r.system.slice(0,34)+'…':r.system}</td><td>${cfgChips(r.cfg,r.system)}</td><td class="note">${r.note}</td>
+      <td class="num">${r.n}</td><td class="num">${pct(r.precision)}</td><td class="num">${pct(r.recall)}</td><td class="num f1">${pct(r.f1)}</td><td class="num">${pct(r.accuracy)}</td>
+      <td class="num">${r.cost==null?'–':'$'+r.cost.toFixed(4)}</td></tr>
+    <tr class="detail" data-d="${i}" style="display:none"><td colspan="12">${rdetail(r)}</td></tr>`).join('');
+  document.querySelectorAll('#rtb tr.row').forEach(tr=>tr.onclick=()=>{const d=document.querySelector(`#rtb tr.detail[data-d="${tr.dataset.i}"]`); d.style.display=d.style.display==='none'?'':'none';});
+  drawTrend();
+}
+function drawTrend(){
+  const bySys={}; RROWS.forEach(r=>{(bySys[r.system]=bySys[r.system]||[]).push([r.iteration,r.f1]);});
+  const W=640,H=160,pad=30, its=[...new Set(RROWS.map(r=>r.iteration))], maxIt=Math.max(1,...its);
+  const x=it=>pad+(W-2*pad)*(maxIt>1?(it-1)/(maxIt-1):0.5), y=f=>H-pad-(H-2*pad)*f, colors=['#58a6ff','#3fb950','#d29922','#f85149','#bc8cff'];
+  let paths='',legend='',ci=0;
+  for(const [sys,pts] of Object.entries(bySys)){pts.sort((a,b)=>a[0]-b[0]);const c=colors[ci%colors.length];ci++;
+    const d=pts.map((p,i)=>`${i?'L':'M'}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' ');
+    const dots=pts.map(p=>`<circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="3" fill="${c}"/>`).join('');
+    paths+=`<path d="${d}" fill="none" stroke="${c}" stroke-width="2"/>${dots}`; legend+=`<span class="legend" style="color:${c}">■ ${sys.length>26?sys.slice(0,26)+'…':sys}</span>`;}
+  const grid=[0,.25,.5,.75,1].map(f=>`<line x1="${pad}" y1="${y(f)}" x2="${W-pad}" y2="${y(f)}" stroke="#232833"/><text x="4" y="${y(f)+3}" fill="#9aa4b2" font-size="10">${(100*f).toFixed(0)}</text>`).join('');
+  $('trend').innerHTML=`<svg width="${W}" height="${H}">${grid}${paths}</svg><div>F1 by iteration ${legend}</div>`;
+}
+document.querySelectorAll('#rtbl th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k; if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=(k==='date'||k==='iteration')?-1:1;} renderResults();});
+
+/* ================= DATASET ================= */
+let DROWS=[];
+async function loadDataset(){
+  const domains = await getJson('../data/domains.json');
+  if (domains===null){ showErr('Could not load data/domains.json — serve over http (python viz/serve.py).'); return; }
+  $('fdomain').innerHTML = domains.map(d=>`<option>${d}</option>`).join('');
+  await loadDomain(domains[0]);
+}
+async function loadDomain(domain){
+  DROWS=[];
+  for (const sp of ['train','val','test']){ const rows=await getJsonl(`../data/${domain}/${sp}.jsonl`); if(rows)rows.forEach(r=>{r.split=sp;DROWS.push(r);}); }
+  const uniq=k=>[...new Set(DROWS.map(r=>r[k]).filter(v=>v!=null))].sort();
+  dopts($('fsplit'),uniq('split')); dopts($('fsub'),uniq('subcategory')); dopts($('fhard'),uniq('hardening')); dopts($('fdiff'),uniq('difficulty')); dopts($('ffmt'),uniq('format'));
+  renderDataset();
+}
+function dopts(sel,vals){const cur=sel.value; sel.innerHTML=`<option value="">all</option>`+vals.map(v=>`<option ${v===cur?'selected':''}>${v}</option>`).join('');}
+function dfiltered(){const q=$('q').value.toLowerCase(),sp=$('fsplit').value,lb=$('flabel').value,su=$('fsub').value,hd=$('fhard').value,di=$('fdiff').value,fm=$('ffmt').value;
+  return DROWS.filter(r=>(!q||r.text.toLowerCase().includes(q))&&(!sp||r.split===sp)&&(lb===''||String(r.label)===lb)&&(!su||r.subcategory===su)&&(!hd||r.hardening===hd)&&(!di||r.difficulty===di)&&(!fm||r.format===fm));}
+function dbars(title,rows,key,stacked){const g={};rows.forEach(r=>{const k=r[key];g[k]=g[k]||{n:0,pos:0};g[k].n++;if(r.label===1)g[k].pos++;});const max=Math.max(1,...Object.values(g).map(v=>v.n));
+  const items=Object.entries(g).sort((a,b)=>b[1].n-a[1].n).map(([k,v])=>{if(stacked){const pp=100*v.pos/v.n;return `<div class="bar"><span class="lab" title="${k}">${k}</span><div class="stacked"><div class="fill pos" style="width:${pp}%"></div><div class="fill neg" style="width:${100-pp}%"></div></div><span class="num">${v.pos}/${v.n-v.pos}</span></div>`;}return `<div class="bar"><span class="lab" title="${k}">${k}</span><div class="track"><div class="fill" style="width:${100*v.n/max}%"></div></div><span class="num">${v.n}</span></div>`;}).join('');
+  return `<div class="stat"><h3>${title}</h3>${items}</div>`;}
+function renderDataset(){const rows=dfiltered();
+  $('hdrsub') && null;
+  $('count').textContent=`${rows.length} / ${DROWS.length} rows shown · ${DROWS.filter(r=>r.label===1).length} pos / ${DROWS.filter(r=>r.label===0).length} neg`;
+  $('list').innerHTML=rows.slice(0,1000).map(r=>`<div class="card"><div class="chips">
+    <span class="chip ${r.label===1?'pos':'neg'}">${r.label===1?'TRIGGER':'PASS'}</span><span class="chip">${r.subcategory}</span>
+    <span class="chip ${r.difficulty==='hard'?'hard':''}">${r.difficulty}</span>${r.hardening&&r.hardening!=='core'?`<span class="chip cot">${r.hardening}</span>`:''}<span class="chip">${r.format}</span><span class="chip">${r.split}</span>
+    <span class="chip id">${r.id}</span><span class="chip id">${r.seed_id}</span></div>
+    <pre>${r.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</pre></div>`).join('')+(rows.length>1000?'<div class="count">(first 1000)</div>':'');
+  $('stats').innerHTML=dbars('By hardening (pos/neg)',rows,'hardening',true)+dbars('By subcategory (pos/neg)',rows,'subcategory',true)+dbars('By difficulty (pos/neg)',rows,'difficulty',true)+dbars('By format',rows,'format',false)+dbars('By split',rows,'split',false);
+}
+['q','fsplit','flabel','fsub','fhard','fdiff','ffmt'].forEach(id=>$(id).addEventListener('input',renderDataset));
+$('fdomain').addEventListener('change',()=>loadDomain($('fdomain').value));
+
+/* ================= VERSIONS ================= */
+function modelSys(ev){ return ev && ev.systems ? ev.systems.find(s=>s.name.includes('MODEL')) : null; }
+function regexSys(ev){ return ev && ev.systems ? ev.systems.find(s=>s.name.toLowerCase().includes('regex')) : null; }
+function deltaSpan(cur, prev, asPct=true){
+  if (prev==null || cur==null) return `<span class="delta-zero">–</span>`;
+  const d=(cur-prev)*(asPct?100:1); const cls=d>0.05?'delta-up':(d<-0.05?'delta-down':'delta-zero'); const arr=d>0.05?'▲':(d<-0.05?'▼':'·');
+  return `<span class="${cls}">${arr} ${d>=0?'+':''}${d.toFixed(asPct?1:0)}</span>`;
+}
+function countDiff(cur, prev){
+  const keys=[...new Set([...Object.keys(cur||{}),...Object.keys(prev||{})])].sort();
+  return keys.map(k=>{const c=cur?.[k]??0, p=prev?.[k]??0, d=c-p; if(d===0&&p!==0)return ''; const isNew=p===0&&c>0;
+    return `<div class="deltarow"><span>${k} ${isNew?'<span class="badge-new">NEW</span>':''}</span><span>${c} <span class="${d>0?'delta-up':(d<0?'delta-down':'delta-zero')}">(${d>=0?'+':''}${d})</span></span></div>`;}).filter(Boolean).join('') || '<div class="sub">no change</div>';
+}
+function f1SliceDiff(cur, prev){
+  const keys=[...new Set([...Object.keys(cur||{}),...Object.keys(prev||{})])].sort();
+  if(!keys.length) return '<div class="sub">n/a</div>';
+  return keys.map(k=>{const c=cur?.[k], p=prev?.[k];
+    return `<div class="deltarow"><span>${k}</span><span>${pct(c)} ${deltaSpan(c,p)}</span></div>`;}).join('');
+}
+async function loadVersions(){
+  const vers = await getJsonl('../results/versions.jsonl');
+  if (vers===null || !vers.length){ $('versions').innerHTML='<div class="sub">No versions yet. Create one: <code>python scripts/snapshot_version.py --version v0 --note "…"</code></div>'; return; }
+  const sorted=[...vers]; // chronological
+  let html='';
+  for (let i=sorted.length-1;i>=0;i--){
+    const v=sorted[i], prev=sorted[i-1]||null;
+    const ds=v.dataset, pds=prev?.dataset;
+    const ms=modelSys(v.eval), pms=prev?modelSys(prev.eval):null;
+    const rs=regexSys(v.eval);
+    const evalSummary = ms ? `
+      <div class="kv"><span>model F1</span><span class="f1">${pct(ms.f1)}</span></div>
+      <div class="kv"><span>precision</span><span>${pct(ms.precision)}</span></div>
+      <div class="kv"><span>recall</span><span>${pct(ms.recall)}</span></div>
+      <div class="kv"><span>accuracy</span><span>${pct(ms.accuracy)}</span></div>
+      ${rs?`<div class="kv"><span>regex F1</span><span>${pct(rs.f1)}</span></div>`:''}
+      ${v.eval.est_cost_usd!=null?`<div class="kv"><span>est. cost</span><span>$${v.eval.est_cost_usd.toFixed(4)}</span></div>`:''}
+      <div class="sub" style="margin-top:4px">${v.eval.run_id} · ${v.eval.config.model.split('/').pop()} · ${v.eval.config.cot?'CoT':'no-CoT'}</div>` : '<div class="sub">no eval linked</div>';
+    const improvements = prev && ms ? `
+      <div class="kv"><span>ΔF1 (headline)</span><span>${deltaSpan(ms.f1, pms?.f1)}</span></div>
+      <div class="kv"><span>ΔPrecision</span><span>${deltaSpan(ms.precision, pms?.precision)}</span></div>
+      <div class="kv"><span>ΔRecall</span><span>${deltaSpan(ms.recall, pms?.recall)}</span></div>
+      <h4 style="margin-top:10px">ΔF1 by hardening</h4>${f1SliceDiff(ms.by_hardening, pms?.by_hardening)}
+      <h4 style="margin-top:10px">ΔF1 by difficulty</h4>${f1SliceDiff(ms.by_difficulty, pms?.by_difficulty)}`
+      : '<div class="sub">first version — no diff</div>';
+    const datasetDiff = `
+      <div class="kv"><span>total rows</span><span>${ds.total} ${prev?deltaSpan(ds.total,pds?.total,false):''}</span></div>
+      <div class="kv"><span>positive</span><span>${ds.pos} ${prev?deltaSpan(ds.pos,pds?.pos,false):''}</span></div>
+      <div class="kv"><span>negative</span><span>${ds.neg} ${prev?deltaSpan(ds.neg,pds?.neg,false):''}</span></div>
+      <div class="kv"><span>splits</span><span>${Object.entries(ds.splits).map(([k,n])=>`${k} ${n}`).join(' · ')}</span></div>
+      <h4 style="margin-top:10px">subcategory counts</h4>${prev?countDiff(ds.by_subcategory,pds?.by_subcategory):Object.entries(ds.by_subcategory).map(([k,n])=>`<div class="deltarow"><span>${k}</span><span>${n}</span></div>`).join('')}
+      ${prev?`<h4 style="margin-top:10px">difficulty counts</h4>${countDiff(ds.by_difficulty,pds?.by_difficulty)}`:''}`;
+    html += `<div class="vcard">
+      <div class="vhead"><span class="vlabel">${v.version}</span><span class="sub">${v.date}</span><span class="note">${v.note||''}</span></div>
+      <div class="vcols">
+        <div><h4>Dataset ${prev?`(vs ${prev.version})`:''}</h4>${datasetDiff}</div>
+        <div><h4>Eval summary</h4>${evalSummary}</div>
+        <div><h4>Improvements ${prev?`(vs ${prev.version})`:''}</h4>${improvements}</div>
+      </div></div>`;
+  }
+  $('versions').innerHTML = html;
+}
+
+/* ================= FINDINGS ================= */
+async function loadFindings(){
+  const f = await getJsonl('../results/findings.jsonl');
+  if (f===null || !f.length){ $('findings').innerHTML='<div class="sub">No findings yet. Add one: <code>python scripts/add_finding.py --version v1 --title "…" --finding "…" --suggestion "…"</code></div>'; return; }
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  let html='';
+  for (let i=f.length-1;i>=0;i--){ const x=f[i];
+    const sug=(x.suggestions||[]).map(s=>`<li>${esc(s)}</li>`).join('');
+    const tags=(x.tags||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join(' ');
+    html += `<div class="vcard">
+      <div class="vhead"><span class="chip mono">${x.id}</span>${x.version?`<span class="chip cot">${esc(x.version)}</span>`:''}<span class="vlabel">${esc(x.title)}</span><span class="sub" style="margin-left:auto">${x.date}</span></div>
+      <div style="margin:6px 0 10px">${esc(x.finding)}</div>
+      ${sug?`<h4 style="margin:0 0 4px;color:var(--muted);font-size:12px;text-transform:uppercase">Suggestions</h4><ul style="margin:0 0 8px 18px">${sug}</ul>`:''}
+      ${tags?`<div class="chips">${tags}</div>`:''}
+    </div>`;
+  }
+  $('findings').innerHTML = html;
+}
+
+/* ---------------- boot ---------------- */
+async function loadAll(){ $('err').style.display='none'; await loadResults(); await loadDataset(); await loadVersions(); await loadFindings(); }
+loadAll();
+</script>
+</body></html>

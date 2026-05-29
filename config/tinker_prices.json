@@ -1,0 +1,6 @@
+{
+  "_note": "USD per MILLION tokens. PLACEHOLDER values — update from the Tinker console / models page (tinker-docs.thinkingmachines.ai/tinker/models). Sampling cost = prompt_tokens * prefill + completion_tokens * sample (per 1e6). 'train' is per-token gradient cost, used later for SFT/OPD runs.",
+  "_confirmed": false,
+  "default": { "prefill": 0.10, "sample": 0.40, "train": 1.00 },
+  "Qwen/Qwen3.5-4B": { "prefill": 0.10, "sample": 0.40, "train": 1.00 }
+}

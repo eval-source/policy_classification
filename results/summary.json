@@ -1,0 +1,592 @@
+[
+  {
+    "name": "REGEX baseline",
+    "n": 180,
+    "precision": 0.8108108108108109,
+    "recall": 0.35714285714285715,
+    "f1": 0.4958677685950414,
+    "accuracy": 0.6611111111111111,
+    "f1_ci": [
+      0.3793103448275862,
+      0.5970149253731343
+    ],
+    "tp": 30,
+    "fp": 7,
+    "fn": 54,
+    "tn": 89,
+    "unparsed": 0,
+    "by_subcategory": {
+      "abstract_question": {
+        "n": 4,
+        "n_pos": 0,
+        "n_neg": 4,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "access_control": {
+        "n": 11,
+        "n_pos": 10,
+        "n_neg": 1,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.09090909090909091,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 10
+      },
+      "eula_boilerplate": {
+        "n": 2,
+        "n_pos": 0,
+        "n_neg": 2,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "helpdesk_ticket": {
+        "n": 14,
+        "n_pos": 0,
+        "n_neg": 14,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "infra_config": {
+        "n": 4,
+        "n_pos": 4,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 0
+      },
+      "pii_handling": {
+        "n": 22,
+        "n_pos": 16,
+        "n_neg": 6,
+        "precision": 0.9,
+        "recall": 0.5625,
+        "f1": 0.6923076923076923,
+        "accuracy": 0.6363636363636364,
+        "specificity": 0.8333333333333334,
+        "fp": 1,
+        "fn": 7
+      },
+      "public_snippet": {
+        "n": 10,
+        "n_pos": 0,
+        "n_neg": 10,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "secret_credential": {
+        "n": 55,
+        "n_pos": 38,
+        "n_neg": 17,
+        "precision": 0.7391304347826086,
+        "recall": 0.4473684210526316,
+        "f1": 0.5573770491803278,
+        "accuracy": 0.509090909090909,
+        "specificity": 0.6470588235294118,
+        "fp": 6,
+        "fn": 21
+      },
+      "security_advice": {
+        "n": 4,
+        "n_pos": 0,
+        "n_neg": 4,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "security_news": {
+        "n": 8,
+        "n_pos": 0,
+        "n_neg": 8,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "security_policy": {
+        "n": 7,
+        "n_pos": 5,
+        "n_neg": 2,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.2857142857142857,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 5
+      },
+      "support_chatter": {
+        "n": 15,
+        "n_pos": 0,
+        "n_neg": 15,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "vendor_mention": {
+        "n": 7,
+        "n_pos": 0,
+        "n_neg": 7,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "vendor_security_claim": {
+        "n": 2,
+        "n_pos": 0,
+        "n_neg": 2,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "vuln_incident": {
+        "n": 15,
+        "n_pos": 11,
+        "n_neg": 4,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.26666666666666666,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 11
+      }
+    },
+    "by_difficulty": {
+      "easy": {
+        "n": 75,
+        "n_pos": 29,
+        "n_neg": 46,
+        "precision": 1.0,
+        "recall": 0.4827586206896552,
+        "f1": 0.6511627906976745,
+        "accuracy": 0.8,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 15
+      },
+      "hard": {
+        "n": 105,
+        "n_pos": 55,
+        "n_neg": 50,
+        "precision": 0.6956521739130435,
+        "recall": 0.2909090909090909,
+        "f1": 0.41025641025641024,
+        "accuracy": 0.5619047619047619,
+        "specificity": 0.86,
+        "fp": 7,
+        "fn": 39
+      }
+    },
+    "by_hardening": {
+      "core": {
+        "n": 75,
+        "n_pos": 29,
+        "n_neg": 46,
+        "precision": 1.0,
+        "recall": 0.4827586206896552,
+        "f1": 0.6511627906976745,
+        "accuracy": 0.8,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 15
+      },
+      "counterfactual": {
+        "n": 60,
+        "n_pos": 30,
+        "n_neg": 30,
+        "precision": 0.6956521739130435,
+        "recall": 0.5333333333333333,
+        "f1": 0.6037735849056605,
+        "accuracy": 0.65,
+        "specificity": 0.7666666666666667,
+        "fp": 7,
+        "fn": 14
+      },
+      "intent_only": {
+        "n": 16,
+        "n_pos": 16,
+        "n_neg": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 16
+      },
+      "near_boundary": {
+        "n": 20,
+        "n_pos": 0,
+        "n_neg": 20,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "obfuscation": {
+        "n": 9,
+        "n_pos": 9,
+        "n_neg": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 9
+      }
+    },
+    "usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "est_cost_usd": 0.0
+    }
+  },
+  {
+    "name": "MODEL Qwen/Qwen3.5-4B",
+    "n": 180,
+    "precision": 0.875,
+    "recall": 1.0,
+    "f1": 0.9333333333333333,
+    "accuracy": 0.9333333333333333,
+    "f1_ci": [
+      0.891566265060241,
+      0.9680851063829787
+    ],
+    "tp": 84,
+    "fp": 12,
+    "fn": 0,
+    "tn": 84,
+    "unparsed": 0,
+    "by_subcategory": {
+      "abstract_question": {
+        "n": 4,
+        "n_pos": 0,
+        "n_neg": 4,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "access_control": {
+        "n": 11,
+        "n_pos": 10,
+        "n_neg": 1,
+        "precision": 0.9090909090909091,
+        "recall": 1.0,
+        "f1": 0.9523809523809523,
+        "accuracy": 0.9090909090909091,
+        "specificity": 0.0,
+        "fp": 1,
+        "fn": 0
+      },
+      "eula_boilerplate": {
+        "n": 2,
+        "n_pos": 0,
+        "n_neg": 2,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "helpdesk_ticket": {
+        "n": 14,
+        "n_pos": 0,
+        "n_neg": 14,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "infra_config": {
+        "n": 4,
+        "n_pos": 4,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 0
+      },
+      "pii_handling": {
+        "n": 22,
+        "n_pos": 16,
+        "n_neg": 6,
+        "precision": 0.8888888888888888,
+        "recall": 1.0,
+        "f1": 0.9411764705882353,
+        "accuracy": 0.9090909090909091,
+        "specificity": 0.6666666666666666,
+        "fp": 2,
+        "fn": 0
+      },
+      "public_snippet": {
+        "n": 10,
+        "n_pos": 0,
+        "n_neg": 10,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "secret_credential": {
+        "n": 55,
+        "n_pos": 38,
+        "n_neg": 17,
+        "precision": 0.8837209302325582,
+        "recall": 1.0,
+        "f1": 0.9382716049382717,
+        "accuracy": 0.9090909090909091,
+        "specificity": 0.7058823529411765,
+        "fp": 5,
+        "fn": 0
+      },
+      "security_advice": {
+        "n": 4,
+        "n_pos": 0,
+        "n_neg": 4,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "security_news": {
+        "n": 8,
+        "n_pos": 0,
+        "n_neg": 8,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.5,
+        "specificity": 0.5,
+        "fp": 4,
+        "fn": 0
+      },
+      "security_policy": {
+        "n": 7,
+        "n_pos": 5,
+        "n_neg": 2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "support_chatter": {
+        "n": 15,
+        "n_pos": 0,
+        "n_neg": 15,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "vendor_mention": {
+        "n": 7,
+        "n_pos": 0,
+        "n_neg": 7,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "vendor_security_claim": {
+        "n": 2,
+        "n_pos": 0,
+        "n_neg": 2,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "vuln_incident": {
+        "n": 15,
+        "n_pos": 11,
+        "n_neg": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "by_difficulty": {
+      "easy": {
+        "n": 75,
+        "n_pos": 29,
+        "n_neg": 46,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "hard": {
+        "n": 105,
+        "n_pos": 55,
+        "n_neg": 50,
+        "precision": 0.8208955223880597,
+        "recall": 1.0,
+        "f1": 0.9016393442622952,
+        "accuracy": 0.8857142857142857,
+        "specificity": 0.76,
+        "fp": 12,
+        "fn": 0
+      }
+    },
+    "by_hardening": {
+      "core": {
+        "n": 75,
+        "n_pos": 29,
+        "n_neg": 46,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "counterfactual": {
+        "n": 60,
+        "n_pos": 30,
+        "n_neg": 30,
+        "precision": 0.7894736842105263,
+        "recall": 1.0,
+        "f1": 0.8823529411764706,
+        "accuracy": 0.8666666666666667,
+        "specificity": 0.7333333333333333,
+        "fp": 8,
+        "fn": 0
+      },
+      "intent_only": {
+        "n": 16,
+        "n_pos": 16,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 0
+      },
+      "near_boundary": {
+        "n": 20,
+        "n_pos": 0,
+        "n_neg": 20,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.8,
+        "specificity": 0.8,
+        "fp": 4,
+        "fn": 0
+      },
+      "obfuscation": {
+        "n": 9,
+        "n_pos": 9,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "usage": {
+      "prompt_tokens": 47911,
+      "completion_tokens": 456,
+      "est_cost_usd": 0.004973,
+      "price_basis": {
+        "prefill": 0.1,
+        "sample": 0.4,
+        "train": 1.0
+      },
+      "price_confirmed": false
+    }
+  }
+]

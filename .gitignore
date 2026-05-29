@@ -1,0 +1,25 @@
+# secrets / env — NEVER commit (holds the Tinker API key)
+.env
+
+# python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# os
+.DS_Store
+
+# local Claude settings (machine-specific permissions)
+.claude/settings.local.json
+
+# large third-party reference PDFs (keep CLAUDE.md which cites them)
+docs/refs/*.pdf
+
+# transient eval prediction dumps (regenerable; overwritten each run)
+results/preds_*.jsonl
+
+# generated datasets: reproducible from the seeded generator, and they contain
+# secret-FORMAT strings (fake values) that trip GitHub push protection.
+# Reproduce with: python data/it/generate.py --variant v1 --seed 0
+data/it/*.jsonl
