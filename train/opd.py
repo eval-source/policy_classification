@@ -18,14 +18,17 @@ import json
 import shutil
 import sys
 from pathlib import Path
+from typing import cast
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "eval"))
 import _env  # noqa: F401
-from prompts import build_messages  # noqa: E402
+from prompts import build_messages, FEWSHOT_EXAMPLES  # noqa: E402
 
 import chz
+import torch
+import tinker
 from tinker_cookbook import model_info
 from tinker_cookbook.distillation import train_on_policy
 from tinker_cookbook.distillation.datasets import (
@@ -35,6 +38,69 @@ from tinker_cookbook.tokenizer_utils import get_tokenizer
 from tinker_cookbook import renderers
 
 STUDENT = "Qwen/Qwen3.5-4B"
+
+# Asymmetric few-shot teacher: the teacher scores the student's (zero-shot) rollouts conditioned
+# on a few-shot PREFIX, so few-shot-teacher knowledge distills into a zero-shot student.
+_TEACHER_PREFIX: list[int] = []
+
+
+async def _kl_penalty_fewshot_teacher(data_D, teacher_clients_D, dataset_indices_D,
+                                      kl_penalty_coef, kl_discount_factor):
+    """incorporate_kl_penalty, but the teacher sees _TEACHER_PREFIX before each sequence.
+    We prepend P prefix tokens to the teacher input and shift the logprob slice by 1+P so the
+    rollout-token alignment with the student is preserved."""
+    TOP = train_on_policy
+    P = _TEACHER_PREFIX
+    full_sequence_inputs_D = [
+        tinker.types.ModelInput.from_ints(
+            P + datum.model_input.to_ints()
+            + [cast(int, datum.loss_fn_inputs["target_tokens"].data[-1])]
+        )
+        for datum in data_D
+    ]
+    teacher_logprobs_D = await asyncio.gather(*[
+        tc.compute_logprobs_async(si)
+        for tc, si in zip(teacher_clients_D, full_sequence_inputs_D)
+    ])
+    sampled_logprobs_D = [d.loss_fn_inputs["logprobs"].to_torch() for d in data_D]
+    float_masks = [d.loss_fn_inputs["mask"].to_torch().float() for d in data_D]
+    off = 1 + len(P)  # original is [1:]; +len(P) drops the prefix logprobs
+    reverse_kl = [
+        (sl - torch.tensor(tl[off:])) * m
+        for tl, sl, m in TOP.safezip(teacher_logprobs_D, sampled_logprobs_D, float_masks)
+    ]
+    per_dataset_kl: dict = {}
+    for i, datum in enumerate(data_D):
+        kl_adv = -kl_penalty_coef * float_masks[i] * reverse_kl[i]
+        if kl_discount_factor > 0:
+            kl_adv = TOP.discounted_future_sum_vectorized(kl_adv, kl_discount_factor)
+        datum.loss_fn_inputs["advantages"] = tinker.TensorData.from_torch(
+            datum.loss_fn_inputs["advantages"].to_torch() + kl_adv
+        )
+        di = dataset_indices_D[i]
+        prev = per_dataset_kl.get(di, (0.0, 0.0))
+        per_dataset_kl[di] = (prev[0] + reverse_kl[i].sum().item(), prev[1] + float_masks[i].sum().item())
+    avg = sum(d.sum() for d in reverse_kl) / sum(m.sum() for m in float_masks)
+    metrics = {"teacher_kl": float(avg)}
+    for di, (ks, ms) in per_dataset_kl.items():
+        if ms > 0:
+            metrics[f"teacher_kl/dataset_{di}"] = float(ks / ms)
+    return metrics
+
+
+def _build_teacher_prefix():
+    tok = get_tokenizer(STUDENT)
+    msgs = []
+    for t, lab in FEWSHOT_EXAMPLES:
+        msgs.append({"role": "user", "content": f'TEXT:\n"""\n{t}\n"""'})
+        msgs.append({"role": "assistant", "content": "TRIGGER" if lab == 1 else "PASS"})
+    try:
+        ids = tok.apply_chat_template(msgs, add_generation_prompt=False, enable_thinking=False, tokenize=True)
+    except TypeError:
+        ids = tok.apply_chat_template(msgs, add_generation_prompt=False, tokenize=True)
+    if hasattr(ids, "input_ids"):
+        ids = ids["input_ids"]
+    return list(ids)
 
 
 @chz.chz
@@ -77,8 +143,16 @@ def main():
     ap.add_argument("--lora-rank", type=int, default=32)
     ap.add_argument("--kl-coef", type=float, default=1.0)
     ap.add_argument("--steps", type=int, default=8)
+    ap.add_argument("--teacher-fewshot", action="store_true",
+                    help="teacher scores rollouts with a few-shot prefix (student stays zero-shot)")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
+
+    if args.teacher_fewshot:
+        global _TEACHER_PREFIX
+        _TEACHER_PREFIX = _build_teacher_prefix()
+        train_on_policy.incorporate_kl_penalty = _kl_penalty_fewshot_teacher
+        print(f"Asymmetric few-shot teacher: prefix = {len(_TEACHER_PREFIX)} tokens")
 
     renderer_name = model_info.get_recommended_renderer_name(STUDENT)
     gpb = 8 if args.smoke else args.groups_per_batch
