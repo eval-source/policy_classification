@@ -178,10 +178,69 @@ def from_code(limit, rng):
     raise RuntimeError(f"all code candidates failed (last: {last})")
 
 
+def from_terraform(limit, rng):
+    # real infrastructure-as-code. Sensitive values (regex secret) -> positive; clean resource
+    # definitions -> negative infra_config (a real "looks-infra-y but no secrets" hard negative).
+    from datasets import load_dataset
+    ds = load_dataset("galcan/terraform_sec", split="train", streaming=True)
+    out = []
+    for row in ds:
+        text = truncate(row.get("input"))
+        if not text:
+            continue
+        hit, _ = regex_override(text)
+        if hit:
+            out.append((text, 1, "secret_credential", "high", "regex", "config", "galcan/terraform_sec"))
+        else:
+            out.append((text, 0, "infra_config", "med", "metadata", "config", "galcan/terraform_sec"))
+        if len(out) >= limit:
+            break
+    return out
+
+
+def from_security_policy(limit, rng):
+    # real information-security policy documents -> in-scope security_policy (positive).
+    from datasets import load_dataset
+    ds = load_dataset("davidquicast/my-information-security-policy-distiset", split="train", streaming=True)
+    out, seen = [], set()
+    for row in ds:
+        text = truncate(row.get("context"))
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        out.append((text, 1, "security_policy", "med", "metadata", "doc",
+                    "davidquicast/my-information-security-policy-distiset"))
+        if len(out) >= limit:
+            break
+    return out
+
+
+def from_enron(limit, rng):
+    # real corporate email = realistic negative traffic + diversity. Conservative labeling:
+    # negative unless a literal secret is present (NOTE: genuinely-sensitive emails may be
+    # under-labeled -> a known label-noise risk for this source).
+    from datasets import load_dataset
+    ds = load_dataset("LLM-PBE/enron-email", split="train", streaming=True)
+    out = []
+    for row in ds:
+        text = truncate(row.get("text") or row.get("body"))
+        if not text or len(text) < 40:
+            continue
+        hit, _ = regex_override(text)
+        if hit:
+            out.append((text, 1, "secret_credential", "high", "regex", "email", "LLM-PBE/enron-email"))
+        else:
+            out.append((text, 0, "support_chatter", "low", "metadata", "email", "LLM-PBE/enron-email"))
+        if len(out) >= limit:
+            break
+    return out
+
+
 # NOTE: CVE dropped from the benchmark (decision 2026-05-29, finding f011): a public
 # third-party CVE advisory sits ambiguously between the policy's in-scope "vulnerability
 # details" and out-of-scope "security news/commentary". `from_cve` is kept for easy revisit.
-SOURCES = {"pii": from_pii, "support": from_support, "code": from_code}
+SOURCES = {"pii": from_pii, "support": from_support, "code": from_code,
+           "terraform": from_terraform, "security_policy": from_security_policy, "enron": from_enron}
 
 
 # --------------------------- build ---------------------------
