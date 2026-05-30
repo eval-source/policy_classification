@@ -366,3 +366,37 @@ PII flipped 236->451 positive.
 
 ### Next: OPD (stage 3), or other ablations (synthetic-only vs mixed, hard-negs, LoRA rank,
 held-out-policy). CoT already shown not worth it (f015).
+
+## 2026-05-29 — Part 3 stage 3: OPD (on-policy distillation)
+
+### Teacher-ceiling check FIRST (research discipline: know your teacher)
+Zero-shot on ds-v5, both larger Qwen teachers are WORSE than our SFT-4B on the hard slices:
+| teacher (zero-shot) | counterfactual spec | synthetic F1 | real F1 |
+|---------------------|---------------------|--------------|---------|
+| SFT-4B (student)    | 95                  | ~99          | 81      |
+| Qwen3-235B-A22B     | 24                  | 88.7         | 64      |
+| Qwen3.5-27B         | 43                  | 90.5         | 74      |
+Bigger != better for a specialized policy task — the base teachers share the frozen model's
+over-triggering and never saw our hard boundaries (f017).
+
+### OPD run (real)
+`train/opd.py`: custom PromptOnlyDataset from our CoT prompts; student=SFT-v2 (load state ckpt),
+teacher=Qwen3.5-27B; student samples CoT rollouts, teacher gives reverse-KL per-token
+supervision. Smoke (2 steps) then 8 steps (teacher_kl ~0.1, stable).
+Result on ds-v5 (CoT eval): F1 91.7->90.3, counterfactual spec 100->85.7 (regressed toward the
+teacher's weakness), synthetic 100->97.8, real 74->72, recall 99->95 — at ~15x completion tokens.
+
+### Reading (finding f018) — OPD NOT worth it here, demonstrated
+Distilling a weaker teacher drags the student toward its failure mode (textbook teacher
+dependence / quality ceiling). Compounded by: ~1-token/short-CoT output (little dense signal)
+and a residual gap that's label ambiguity, not capacity.
+
+## PART 3 CONCLUSION
+- **SFT (LoRA) is the win** and the production model: vs frozen, counterfactual spec 48->95,
+  noisy spec 74->100, real recall 80->100/97, synthetic F1 ->~100; PII rubric fix lifted real
+  F1 to ~81.
+- **CoT (templated) not worth it** (f015): hurt real precision, 11x cost.
+- **OPD not worth it** (f017/f018): no available teacher beats the specialized student; distilling
+  a weaker one regresses it, at high cost.
+- Remaining real-PII precision is a fuzzy-label floor (f016), not a model-capacity problem.
+- Deploy/sampling path exercised end-to-end (eval runs sample trained tinker:// checkpoints).
