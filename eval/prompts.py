@@ -40,6 +40,36 @@ def build_messages(text: str, policy: str = IT_POLICY, cot: bool = False):
     ]
 
 
+# Hand-authored few-shot examples covering the boundaries teachers fail (esp. counterfactuals).
+# Not drawn from the test set. Used to lift a zero-shot teacher's discrimination in-context.
+FEWSHOT_EXAMPLES = [
+    ("Here's the deploy bot's GitHub token: ghp_9fK2mNqRsT4vWxYz7aBcDeFgHiJkLmNoPq01", 1),  # real secret
+    ("Set GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (placeholder — fill your own)", 0),  # placeholder
+    ("Done — granted Priya admin/sudo on the prod cluster and added her to the secrets group.", 1),  # enacted grant
+    ("Priya is asking whether she could get admin on prod — should we approve? No change made yet.", 0),  # request, not enacted
+    ("INCIDENT: we were breached overnight, attacker exfiltrated the prod customer DB. IR is live.", 1),  # our incident
+    ("Reuters: Globex disclosed a data breach this week affecting 2M users. Glad it wasn't us.", 0),  # third-party news
+    ("Customer record: Jane Doe, DOB 1987-03-12, SSN 412-55-9087, 14 Elm St, card 4242 4242 4242 4242.", 1),  # PII record
+    ("thanks again John, really appreciate the help — talk Tuesday!", 0),  # casual name mention
+    ("api key (base64, decode before use): QUtJQVRFU1RLRVkxMjM0NTY3ODkw", 1),  # obfuscated secret
+    ("anyone else's VPN flaking out today? third time this week ugh", 0),  # support chatter
+]
+
+
+def build_messages_fewshot(text: str, policy: str = IT_POLICY):
+    """Few-shot prompt: policy in system, then labeled example turns, then the query."""
+    system = (
+        "You are a precise content-policy classifier.\n\n" + policy
+        + "\n\nFor each TEXT, answer with exactly one word: TRIGGER or PASS."
+    )
+    msgs = [{"role": "system", "content": system}]
+    for ex_text, ex_label in FEWSHOT_EXAMPLES:
+        msgs.append({"role": "user", "content": f"TEXT:\n\"\"\"\n{ex_text}\n\"\"\""})
+        msgs.append({"role": "assistant", "content": "TRIGGER" if ex_label == 1 else "PASS"})
+    msgs.append({"role": "user", "content": f"TEXT:\n\"\"\"\n{text}\n\"\"\""})
+    return msgs
+
+
 def parse_label(output: str):
     """Map a model completion to {1,0,None}. None = unparseable."""
     if not output:

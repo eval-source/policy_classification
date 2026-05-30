@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _env  # noqa: F401  (loads API key)
 import random
 
-from prompts import build_messages, parse_label
+from prompts import build_messages, build_messages_fewshot, parse_label
 import regex_baseline
 
 DEFAULT_MODEL = "Qwen/Qwen3.5-4B"
@@ -60,7 +60,7 @@ def encode_chat(tok, messages, cot: bool):
     return list(ids)
 
 
-def run_model(rows, model, cot, temperature, max_tokens, concurrency):
+def run_model(rows, model, cot, temperature, max_tokens, concurrency, fewshot=False):
     import tinker
     from tinker import types
 
@@ -69,8 +69,11 @@ def run_model(rows, model, cot, temperature, max_tokens, concurrency):
         max_tokens=max_tokens, temperature=temperature, stop=["<|im_end|>"]
     )
 
+    def build(text):
+        return build_messages_fewshot(text) if fewshot else build_messages(text, cot=cot)
+
     def one(row):
-        ids = encode_chat(tok, build_messages(row["text"], cot=cot), cot=cot)
+        ids = encode_chat(tok, build(row["text"]), cot=cot)
         prompt = types.ModelInput.from_ints(ids)
         for attempt in range(3):
             try:
@@ -231,6 +234,7 @@ def main():
     ap.add_argument("--mode", choices=["model", "regex", "both"], default="both")
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--cot", action="store_true")
+    ap.add_argument("--fewshot", action="store_true", help="prepend in-context labeled examples")
     ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--max-tokens", type=int, default=512)
     ap.add_argument("--concurrency", type=int, default=16)
@@ -268,7 +272,8 @@ def main():
     if args.mode in ("model", "both"):
         tag = f"model{'_cot' if args.cot else ''}"
         preds, raws, usage = run_model(
-            rows, args.model, args.cot, args.temperature, args.max_tokens, args.concurrency
+            rows, args.model, args.cot, args.temperature, args.max_tokens, args.concurrency,
+            fewshot=args.fewshot,
         )
         price, confirmed = load_prices(args.model)
         cost = estimate_cost(usage, price)
