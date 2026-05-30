@@ -35,13 +35,20 @@ import regex_baseline  # reuse the deterministic secret detector
 ROOT = Path(__file__).resolve().parent.parent.parent
 OUT = ROOT / "data" / "real"
 
-# PII entity classes we treat as IT-sensitive ("PII handling"), vs casual low-sensitivity ones.
+# PII rubric (v2): a text is in-scope "PII handling" if it discloses HIGH-sensitivity PII,
+# OR it is a PERSONAL RECORD — multiple distinct identifiers about a person (name + DOB +
+# address + phone, etc.). A lone/casual identifier (just a first name, or one email) is NOT.
+# (v1 only fired on HIGH_SENS, which mislabeled multi-identifier records as negative and
+# capped real precision — see finding f015.)
 HIGH_SENS = {
     "SSN", "SOCIALNUMBER", "PASSPORT", "DRIVERLICENSE", "IDCARD", "TAXNUMBER",
     "CREDITCARDNUMBER", "CREDITCARDCVV", "IBAN", "BIC", "ACCOUNTNUMBER", "PIN",
     "PASSWORD", "MEDICAL", "BITCOINADDRESS", "ETHEREUMADDRESS", "VEHICLEVIN",
     "PHONEIMEI", "MASKEDNUMBER",
 }
+# entity labels that don't, by themselves, identify a person (don't count toward "record")
+NON_IDENTIFIER = {"TIME", "URL", "CURRENCY", "AMOUNT", "ORDINALDIRECTION", "JOBTYPE"}
+RECORD_MIN_IDENTIFIERS = 3  # >= this many distinct identifier types => a personal record
 # A support-ticket positive needs BOTH a security-ish tag AND incident language in the body.
 # (Verification showed a tag alone is too loose — it swept in outages, bug reports, and
 # security-compliance *inquiries*; the incident-keyword gate drops those "request" tickets.)
@@ -79,13 +86,16 @@ def from_pii(limit, rng):
         if not text:
             continue
         labels = {m.get("label", "").upper() for m in (row.get("privacy_mask") or [])}
+        n_identifiers = len(labels - NON_IDENTIFIER)
         hit_secret, _ = regex_override(text)
         if hit_secret:
             lab, sub, conf, src = 1, "secret_credential", "high", "regex"
         elif labels & HIGH_SENS:
-            lab, sub, conf, src = 1, "pii_handling", "high", "metadata"
+            lab, sub, conf, src = 1, "pii_handling", "high", "metadata"  # high-sensitivity PII
+        elif n_identifiers >= RECORD_MIN_IDENTIFIERS:
+            lab, sub, conf, src = 1, "pii_handling", "med", "metadata"   # multi-identifier record
         else:
-            lab, sub, conf, src = 0, "pii_handling", "low", "metadata"  # casual PII only
+            lab, sub, conf, src = 0, "pii_handling", "low", "metadata"   # lone/casual identifier
         out.append((text, lab, sub, conf, src, "prose", "ai4privacy/pii-masking-300k"))
         if len(out) >= limit:
             break

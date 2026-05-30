@@ -48,9 +48,11 @@ def make_sampler(model: str):
 
 def encode_chat(tok, messages, cot: bool):
     kwargs = dict(add_generation_prompt=True, tokenize=True)
-    # hybrid Qwen3.5: disable thinking unless we explicitly want CoT
+    # We use PROMPTED CoT (reasoning instructed in the message + parsed from the last line),
+    # NOT Qwen's native <think> mode — and we train that way too. So always disable native
+    # thinking; `cot` only controls the prompt wording + max_tokens.
     try:
-        ids = tok.apply_chat_template(messages, enable_thinking=cot, **kwargs)
+        ids = tok.apply_chat_template(messages, enable_thinking=False, **kwargs)
     except TypeError:
         ids = tok.apply_chat_template(messages, **kwargs)
     if hasattr(ids, "input_ids"):

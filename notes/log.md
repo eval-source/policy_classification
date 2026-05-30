@@ -305,3 +305,64 @@ Split into:
 
 Ablation now reads directly: on **ds-v4**, frozen (iter6) vs SFT (iter7) → F1 86→91,
 counterfactual-spec 48→95, real-F1 70→74. Hold data fixed, vary model = training gains.
+
+## 2026-05-29 — Part 3 stage 2: CoT SFT (ablation: CoT vs no-CoT)
+
+### Setup
+- `train/build_sft_data.py --cot`: rationales generated from known (label, subcategory,
+  hardening) — teaches "is it real/enacted/ours/high-sensitivity?" then the label on a new line.
+- PROMPTED CoT (reasoning in the message + parse last line), NOT Qwen native <think>. Trained
+  non-thinking; fixed `run_eval` encode_chat to always `enable_thinking=False` (train/eval match).
+- Verified the training mask (research discipline): 22 weighted tokens = full reasoning+label
+  (the `num_loss_tokens` metric is normalized/misleading — inspect, don't trust it).
+
+### Result on ds-v4 (iter8) vs SFT no-CoT (iter7)
+| metric        | SFT  | SFT+CoT |
+|---------------|------|---------|
+| overall F1    | 90.6 | 84.6    |
+| synthetic F1  | 99.4 | 98.4    |
+| real F1       | 73.7 | 60.2    |
+| real precision| 58.3 | 45.6    |
+| recall        | 100  | 96.8    |
+| completion tok| 1.1k | 12k (~11x) |
+| est cost      |$.015 | $.021   |
+
+### Reading (finding f015) — CoT is NOT worth it here
+CoT HURT real precision and recall at 11x generation cost. Failure mode: the model emits the
+templated rationale "discloses sensitive PII -> TRIGGER" on any PII-shaped real text — it
+pattern-matched the rationale instead of learning high/low-sensitivity discrimination. For this
+short, decisive classification task, no-CoT SFT is the better, cheaper production candidate.
+Caveat: several real-PII "FPs" are label-ambiguous (records w/ name+DOB+phone+address) — the
+real fix is upstream (tighten the low-sensitivity-PII rubric), and/or a stronger teacher for
+genuinely discriminative rationales (-> OPD).
+
+### Next
+- Tighten PII rubric and re-measure (the binding real-precision constraint), OR
+- Stage 3 OPD (teacher-generated dense supervision), OR
+- Other ablations (hard-negs in/out, synthetic-only vs mixed, LoRA rank, held-out-policy).
+
+## 2026-05-29 — PII rubric fix -> ds-v5 (new dataset version)
+
+Changed `fetch_real.py` PII labeling: positive if HIGH_SENS OR a multi-identifier personal
+RECORD (>=3 distinct identifier types); negative only for lone/casual identifiers. Real labels
+changed -> new dataset version **ds-v5** (synthetic v4 unchanged + real relabeled; fp d482327).
+PII flipped 236->451 positive.
+
+### Attribution (ds-v5 real slice; ~33 positives, wide CIs)
+| model                       | real F1 | real P | real spec |
+|-----------------------------|---------|--------|-----------|
+| frozen                      | 68.7    | 67.6   | 95.6      |
+| SFT v1 (trained ds-v4)      | 81.0    | 69.6   | 94.4      |
+| SFT v2 (retrained on ds-v5) | 74.4    | 60.4   | 91.5      |
+
+- **Label correction was the lever**: same SFT model, real F1 73.7 (ds-v4) -> 81.0 (ds-v5),
+  precision 58->70. Confirms f015 — much of the "real precision problem" was mislabeled records.
+- **Retraining didn't add** (f-finding): SFT v2 over-generalized PII->trigger (+7 real FPs);
+  residual real-PII precision (pii spec ~52) is a genuine FUZZY-boundary problem (lone
+  identifiers vs records), partly inherent label ambiguity. Don't chase with more SFT.
+- Production candidate: SFT v1 on corrected data (ds-v5).
+- Caveat: ai4privacy is PII-dense by design, so "records=positive" makes most of it positive;
+  the rubric is defensible but approximate. Real win = removing the clear mislabels.
+
+### Next: OPD (stage 3), or other ablations (synthetic-only vs mixed, hard-negs, LoRA rank,
+held-out-policy). CoT already shown not worth it (f015).
