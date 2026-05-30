@@ -235,6 +235,7 @@ def main():
     ap.add_argument("--max", type=int, default=0, help="limit number of examples (0=all)")
     ap.add_argument("--out", default="results")
     ap.add_argument("--note", default="", help="human label for this iteration")
+    ap.add_argument("--dataset-version", default="", help="dataset version this run used, e.g. ds-v4")
     args = ap.parse_args()
 
     # --data accepts one or more comma-separated files (rows keep their own `source` field,
@@ -310,7 +311,8 @@ def append_history(args, iteration, run_id, now, config, summaries):
         iteration=iteration, run_id=run_id,
         timestamp=now.isoformat(timespec="seconds"),
         date=now.strftime("%Y-%m-%d %H:%M"),
-        note=args.note, config=config, systems=summaries,
+        note=args.note, dataset_version=args.dataset_version,
+        config=config, systems=summaries,
     )
     with hist_path.open("a") as f:
         f.write(json.dumps(record) + "\n")

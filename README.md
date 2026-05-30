@@ -10,7 +10,8 @@ end to end: synthetic dataset, a sliceable eval harness, and a dashboard for tra
 ```
 data/it/generate.py     synthetic IT-domain generator (v0 easy core + v1 hard families)
 eval/                   sliceable eval harness (Tinker sampling + regex baseline), metrics, cost
-viz/                    single-page dashboard (Results · Dataset · Versions · Findings) + serve.py
+viz/                    single-page dashboard (Results · Dataset · Datasets · Findings) + serve.py
+train/                  SFT data builder + Tinker SFT runner (Part 3)
 scripts/                env bootstrap, version snapshots, findings logging
 results/                history.jsonl, versions.jsonl, findings.jsonl, summary.json
 notes/log.md            running experiment log
@@ -56,13 +57,35 @@ python viz/serve.py     # serves the repo root; open http://127.0.0.1:8000/viz/i
 ```
 
 Live-loads the JSONL files (no DB, no build step) — refresh after any run.
-- **Results** — every eval iteration, sortable, with confusion matrix + per-slice detail + cost.
-- **Dataset** — browse/filter every row + stats dashboard.
-- **Versions** — `scripts/snapshot_version.py` snapshots (dataset stats + eval); shows the diff/ΔF1.
+- **Results** — every eval iteration, sortable; shows its `dataset` version; expand for confusion
+  matrix, per-slice detail, cost, and ✗failures/✓successes per run.
+- **Dataset** — browse/filter every row (synthetic + real, by source) + stats dashboard.
+- **Datasets** — dataset versions (`ds-vX`, via `scripts/snapshot_dataset.py`): composition + diff
+  vs the previous version, AND an **ablation table** of the iterations run against each version.
 - **Findings** — `scripts/add_finding.py` observations + suggestions per iteration.
+
+## Concepts: dataset versions vs iterations
+
+- A **dataset version** (`ds-vX`, in `results/datasets.jsonl`) is the data composition + a content
+  fingerprint. Snapshot with `scripts/snapshot_dataset.py --version ds-vX`.
+- An **iteration** (`results/history.jsonl`) is one eval run = (model/config) × dataset version;
+  it records `dataset_version`. Pass `--dataset-version ds-vX` to `run_eval.py`.
+- Ablation = hold one fixed, vary the other: same `ds-vX` across models → **training gains**;
+  same model across `ds-vX` → **benchmark difficulty**.
+
+## Train (Part 3)
+
+```bash
+python train/build_sft_data.py                 # synthetic+real train -> conversations JSONL
+python train/sft.py --smoke                     # validate the pipeline (2 steps)
+python train/sft.py --name sft_v1 --epochs 2    # prints the tinker:// sampler checkpoint
+python eval/run_eval.py --data data/it/test.jsonl,data/real/test_realistic.jsonl \
+    --model tinker://<ckpt> --dataset-version ds-v4 --note "SFT v1"
+```
 
 ## Status
 
-Frozen-model F1 curve (benchmark difficulty, model fixed): **v0 98.2 → v1 96.2 → v2 95.8 → v3 93.3**.
-The dominant failure mode is over-triggering on near-boundary negatives (documented example keys,
-third-party breach news, access requests-vs-grants). Next: real-data mix, then SFT/CoT training.
+Frozen-model F1 curve (benchmark difficulty, model fixed): **ds-v0 98.2 → v1 96.2 → v2 95.8 →
+v3 93.3**, then real data exposes the synthetic→real gap (real F1 ~70). First **SFT** on ds-v4 lifts
+the model: counterfactual specificity 48→95, typo-noise specificity 74→100, real recall 80→100
+(synthetic F1 92.8→99.4, real 70→74). Next: CoT SFT, then on-policy distillation, then ablations.

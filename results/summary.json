@@ -1,19 +1,19 @@
 [
   {
-    "name": "MODEL Qwen/Qwen3.5-4B",
+    "name": "MODEL tinker://4290531f-30bf-57dd-86f6-18d4892e1bc6:train:0/sampler_weights/final",
     "n": 469,
-    "precision": 0.7919463087248322,
-    "recall": 0.944,
-    "f1": 0.8613138686131386,
-    "accuracy": 0.9189765458422174,
+    "precision": 0.8278145695364238,
+    "recall": 1.0,
+    "f1": 0.9057971014492754,
+    "accuracy": 0.9445628997867804,
     "f1_ci": [
-      0.8161764705882354,
-      0.9010989010989012
+      0.8669201520912547,
+      0.9398496240601504
     ],
-    "tp": 118,
-    "fp": 31,
-    "fn": 7,
-    "tn": 313,
+    "tp": 125,
+    "fp": 26,
+    "fn": 0,
+    "tn": 318,
     "unparsed": 0,
     "by_subcategory": {
       "abstract_question": {
@@ -32,12 +32,12 @@
         "n": 15,
         "n_pos": 10,
         "n_neg": 5,
-        "precision": 0.7142857142857143,
+        "precision": 1.0,
         "recall": 1.0,
-        "f1": 0.8333333333333333,
-        "accuracy": 0.7333333333333333,
-        "specificity": 0.2,
-        "fp": 4,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
         "fn": 0
       },
       "eula_boilerplate": {
@@ -80,13 +80,13 @@
         "n": 98,
         "n_pos": 42,
         "n_neg": 56,
-        "precision": 0.7307692307692307,
-        "recall": 0.9047619047619048,
-        "f1": 0.8085106382978723,
-        "accuracy": 0.8163265306122449,
-        "specificity": 0.75,
-        "fp": 14,
-        "fn": 4
+        "precision": 0.6363636363636364,
+        "recall": 1.0,
+        "f1": 0.7777777777777778,
+        "accuracy": 0.7551020408163265,
+        "specificity": 0.5714285714285714,
+        "fp": 24,
+        "fn": 0
       },
       "public_snippet": {
         "n": 122,
@@ -95,21 +95,21 @@
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 0.9836065573770492,
-        "specificity": 0.9836065573770492,
-        "fp": 2,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
         "fn": 0
       },
       "secret_credential": {
         "n": 50,
         "n_pos": 41,
         "n_neg": 9,
-        "precision": 0.8723404255319149,
+        "precision": 0.9761904761904762,
         "recall": 1.0,
-        "f1": 0.9318181818181819,
-        "accuracy": 0.88,
-        "specificity": 0.3333333333333333,
-        "fp": 6,
+        "f1": 0.9879518072289156,
+        "accuracy": 0.98,
+        "specificity": 0.8888888888888888,
+        "fp": 1,
         "fn": 0
       },
       "security_advice": {
@@ -131,9 +131,9 @@
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 0.5,
-        "specificity": 0.5,
-        "fp": 3,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
         "fn": 0
       },
       "security_policy": {
@@ -188,13 +188,13 @@
         "n": 20,
         "n_pos": 17,
         "n_neg": 3,
-        "precision": 0.9333333333333333,
-        "recall": 0.8235294117647058,
-        "f1": 0.8749999999999999,
-        "accuracy": 0.8,
-        "specificity": 0.6666666666666666,
-        "fp": 1,
-        "fn": 3
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
       }
     },
     "by_difficulty": {
@@ -214,25 +214,25 @@
         "n": 104,
         "n_pos": 56,
         "n_neg": 48,
-        "precision": 0.8,
+        "precision": 0.9824561403508771,
         "recall": 1.0,
-        "f1": 0.888888888888889,
-        "accuracy": 0.8653846153846154,
-        "specificity": 0.7083333333333334,
-        "fp": 14,
+        "f1": 0.9911504424778761,
+        "accuracy": 0.9903846153846154,
+        "specificity": 0.9791666666666666,
+        "fp": 1,
         "fn": 0
       },
       "natural": {
         "n": 297,
         "n_pos": 35,
         "n_neg": 262,
-        "precision": 0.6222222222222222,
-        "recall": 0.8,
-        "f1": 0.7000000000000001,
-        "accuracy": 0.9191919191919192,
-        "specificity": 0.9351145038167938,
-        "fp": 17,
-        "fn": 7
+        "precision": 0.5833333333333334,
+        "recall": 1.0,
+        "f1": 0.7368421052631579,
+        "accuracy": 0.9158249158249159,
+        "specificity": 0.9045801526717557,
+        "fp": 25,
+        "fn": 0
       }
     },
     "by_hardening": {
@@ -264,12 +264,12 @@
         "n": 47,
         "n_pos": 26,
         "n_neg": 21,
-        "precision": 0.7027027027027027,
+        "precision": 0.9629629629629629,
         "recall": 1.0,
-        "f1": 0.8253968253968255,
-        "accuracy": 0.7659574468085106,
-        "specificity": 0.47619047619047616,
-        "fp": 11,
+        "f1": 0.9811320754716981,
+        "accuracy": 0.9787234042553191,
+        "specificity": 0.9523809523809523,
+        "fp": 1,
         "fn": 0
       },
       "intent_only": {
@@ -291,9 +291,9 @@
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 0.8,
-        "specificity": 0.8,
-        "fp": 3,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
         "fn": 0
       },
       "obfuscation": {
@@ -312,19 +312,19 @@
         "n": 297,
         "n_pos": 35,
         "n_neg": 262,
-        "precision": 0.6222222222222222,
-        "recall": 0.8,
-        "f1": 0.7000000000000001,
-        "accuracy": 0.9191919191919192,
-        "specificity": 0.9351145038167938,
-        "fp": 17,
-        "fn": 7
+        "precision": 0.5833333333333334,
+        "recall": 1.0,
+        "f1": 0.7368421052631579,
+        "accuracy": 0.9158249158249159,
+        "specificity": 0.9045801526717557,
+        "fp": 25,
+        "fn": 0
       }
     },
     "usage": {
       "prompt_tokens": 148603,
-      "completion_tokens": 1087,
-      "est_cost_usd": 0.015295,
+      "completion_tokens": 1089,
+      "est_cost_usd": 0.015296,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -332,6 +332,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it006-20260529_163820-72ed7e__model.jsonl"
+    "preds_file": "results/preds_runs/it007-20260529_165455-a95b66__model.jsonl"
   }
 ]

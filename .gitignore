@@ -28,3 +28,9 @@ data/it/*.jsonl
 # real data fetched from HF: not redistributable (licenses + may contain PII).
 # Reproduce with: python data/it/fetch_real.py
 data/real/
+
+# SFT/training data (derived from gitignored datasets)
+train/*.jsonl
+
+# training run artifacts (checkpoints are on Tinker; logs may echo fake-secret examples)
+train/runs/

@@ -260,3 +260,48 @@ long/casual/messy while synthetic was short/clean. Closing that register gap.
 Realism treatment did its job: surfaced a new, trainable weakness (typo robustness) and added
 the casual register real data has. Noise augmentation in TRAINING is now an obvious lever and
 should also help real-data specificity.
+
+## 2026-05-29 — Part 3: SFT (stage 1)
+
+### Setup
+- `train/build_sft_data.py`: synthetic+real train/val → conversations JSONL (eval prompt +
+  label as assistant turn). 2038 train (718 pos), 497 val. Noise already baked into synthetic.
+- `train/sft.py`: cookbook SFT (FromConversationFileBuilder + supervised.train), Qwen3.5-4B,
+  LoRA r32, TrainOnWhat.ALL_ASSISTANT_MESSAGES (num_loss_tokens=1/example confirms label-only
+  loss). Smoke (2 steps) then full (2 epochs, ~30 steps, train NLL ~0.005). Eval via our
+  harness on the SAME held-out test (--model tinker://<ckpt>).
+
+### SFT v1 vs frozen (model changed, data fixed — the valid comparison, f007)
+| slice            | frozen v4 | SFT v1 |
+|------------------|-----------|--------|
+| synthetic F1     | 92.8      | 99.4   |
+| real F1          | 70.0      | 73.7   |
+| counterfactual sp| 47.6      | 95.2   |
+| noisy spec       | 74.3      | 100    |
+| real recall      | 80        | 100    |
+- recall now 100% everywhere (0 FN). Both engineered weaknesses (counterfactual over-trigger,
+  typo brittleness) essentially solved. Real under-triggering fixed (recall 80->100).
+- Residual: real PII-prose precision (prose spec 55%, pii spec 57%) — over-fires on casual
+  names/emails; partly debatable labels (low-sensitivity PII rubric).
+
+### Next
+- Stage 2: CoT SFT (reason "real/enacted/ours?" then label) — target real PII-prose precision.
+- Stage 3: on-policy distillation.
+- Ablations: CoT vs no-CoT (+ latency/cost), hard-negs in/out, synthetic-only vs mixed,
+  per-policy adapter vs unified, LoRA rank, data-scale curve, held-out-policy.
+
+## 2026-05-29 — separate dataset versions from iterations (for ablation)
+
+The old `versions.jsonl` conflated dataset versions (v0..v4) with experiments (real-v1, sft-v1).
+Split into:
+- **`results/datasets.jsonl`** (`scripts/snapshot_dataset.py`): named `ds-vX` = data composition
+  + content fingerprint. Migrated ds-v0..ds-v3 (synthetic), ds-v3+real, ds-v4 (synth v4 + real,
+  fp 06d0912).
+- **`history.jsonl`** iterations now carry `dataset_version` (run_eval `--dataset-version`);
+  backfilled iters 1-6→ds-v0..ds-v4, iter7 (SFT)→ds-v4.
+- Dashboard: **Versions tab → Datasets tab** — composition + diff + an **ablation table** per
+  dataset version (iterations/models run against it). Results table gained a `dataset` column.
+- Retired `snapshot_version.py` + `versions.jsonl`.
+
+Ablation now reads directly: on **ds-v4**, frozen (iter6) vs SFT (iter7) → F1 86→91,
+counterfactual-spec 48→95, real-F1 70→74. Hold data fixed, vary model = training gains.
