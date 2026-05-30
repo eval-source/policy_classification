@@ -1,19 +1,19 @@
 [
   {
-    "name": "MODEL tinker://5dbc6cd5-5904-54ed-8ffb-0770f3d34098:train:0/sampler_weights/final +CoT",
+    "name": "MODEL tinker://42bf38f4-c2b7-570f-8031-b222a246f69d:train:0/sampler_weights/final +CoT",
     "n": 453,
-    "precision": 0.8602941176470589,
-    "recall": 0.9512195121951219,
-    "f1": 0.9034749034749036,
-    "accuracy": 0.9448123620309051,
+    "precision": 0.8344827586206897,
+    "recall": 0.983739837398374,
+    "f1": 0.9029850746268656,
+    "accuracy": 0.9426048565121413,
     "f1_ci": [
-      0.8646616541353385,
-      0.9391304347826088
+      0.8634686346863468,
+      0.937888198757764
     ],
-    "tp": 117,
-    "fp": 19,
-    "fn": 6,
-    "tn": 311,
+    "tp": 121,
+    "fp": 24,
+    "fn": 2,
+    "tn": 306,
     "unparsed": 0,
     "by_subcategory": {
       "abstract_question": {
@@ -80,13 +80,13 @@
         "n": 83,
         "n_pos": 41,
         "n_neg": 42,
-        "precision": 0.7450980392156863,
-        "recall": 0.926829268292683,
-        "f1": 0.8260869565217392,
-        "accuracy": 0.8072289156626506,
+        "precision": 0.75,
+        "recall": 0.9512195121951219,
+        "f1": 0.8387096774193549,
+        "accuracy": 0.8192771084337349,
         "specificity": 0.6904761904761905,
         "fp": 13,
-        "fn": 3
+        "fn": 2
       },
       "public_snippet": {
         "n": 122,
@@ -131,21 +131,21 @@
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 0.8333333333333334,
-        "specificity": 0.8333333333333334,
-        "fp": 1,
+        "accuracy": 0.6666666666666666,
+        "specificity": 0.6666666666666666,
+        "fp": 2,
         "fn": 0
       },
       "security_policy": {
         "n": 9,
         "n_pos": 8,
         "n_neg": 1,
-        "precision": 1.0,
+        "precision": 0.8888888888888888,
         "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "f1": 0.9411764705882353,
+        "accuracy": 0.8888888888888888,
+        "specificity": 0.0,
+        "fp": 1,
         "fn": 0
       },
       "support_chatter": {
@@ -155,9 +155,9 @@
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "accuracy": 0.987012987012987,
+        "specificity": 0.987012987012987,
+        "fp": 1,
         "fn": 0
       },
       "vendor_mention": {
@@ -179,9 +179,9 @@
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "accuracy": 0.0,
+        "specificity": 0.0,
+        "fp": 2,
         "fn": 0
       },
       "vuln_incident": {
@@ -189,12 +189,12 @@
         "n_pos": 16,
         "n_neg": 3,
         "precision": 1.0,
-        "recall": 0.8125,
-        "f1": 0.896551724137931,
-        "accuracy": 0.8421052631578947,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
         "specificity": 1.0,
         "fp": 0,
-        "fn": 3
+        "fn": 0
       }
     },
     "by_difficulty": {
@@ -214,25 +214,25 @@
         "n": 104,
         "n_pos": 56,
         "n_neg": 48,
-        "precision": 0.9333333333333333,
+        "precision": 0.875,
         "recall": 1.0,
-        "f1": 0.9655172413793104,
-        "accuracy": 0.9615384615384616,
-        "specificity": 0.9166666666666666,
-        "fp": 4,
+        "f1": 0.9333333333333333,
+        "accuracy": 0.9230769230769231,
+        "specificity": 0.8333333333333334,
+        "fp": 8,
         "fn": 0
       },
       "natural": {
         "n": 281,
         "n_pos": 33,
         "n_neg": 248,
-        "precision": 0.6428571428571429,
-        "recall": 0.8181818181818182,
-        "f1": 0.7200000000000001,
-        "accuracy": 0.9252669039145908,
-        "specificity": 0.9395161290322581,
-        "fp": 15,
-        "fn": 6
+        "precision": 0.6595744680851063,
+        "recall": 0.9393939393939394,
+        "f1": 0.775,
+        "accuracy": 0.9359430604982206,
+        "specificity": 0.9354838709677419,
+        "fp": 16,
+        "fn": 2
       }
     },
     "by_hardening": {
@@ -264,12 +264,12 @@
         "n": 47,
         "n_pos": 26,
         "n_neg": 21,
-        "precision": 0.896551724137931,
+        "precision": 0.8666666666666667,
         "recall": 1.0,
-        "f1": 0.9454545454545454,
-        "accuracy": 0.9361702127659575,
-        "specificity": 0.8571428571428571,
-        "fp": 3,
+        "f1": 0.9285714285714286,
+        "accuracy": 0.9148936170212766,
+        "specificity": 0.8095238095238095,
+        "fp": 4,
         "fn": 0
       },
       "intent_only": {
@@ -291,9 +291,9 @@
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 0.9333333333333333,
-        "specificity": 0.9333333333333333,
-        "fp": 1,
+        "accuracy": 0.7333333333333333,
+        "specificity": 0.7333333333333333,
+        "fp": 4,
         "fn": 0
       },
       "obfuscation": {
@@ -312,19 +312,19 @@
         "n": 281,
         "n_pos": 33,
         "n_neg": 248,
-        "precision": 0.6428571428571429,
-        "recall": 0.8181818181818182,
-        "f1": 0.7200000000000001,
-        "accuracy": 0.9252669039145908,
-        "specificity": 0.9395161290322581,
-        "fp": 15,
-        "fn": 6
+        "precision": 0.6595744680851063,
+        "recall": 0.9393939393939394,
+        "f1": 0.775,
+        "accuracy": 0.9359430604982206,
+        "specificity": 0.9354838709677419,
+        "fp": 16,
+        "fn": 2
       }
     },
     "usage": {
       "prompt_tokens": 155200,
-      "completion_tokens": 15973,
-      "est_cost_usd": 0.021909,
+      "completion_tokens": 14878,
+      "est_cost_usd": 0.021471,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -332,6 +332,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it014-20260529_180740-74bdd7__model_cot.jsonl"
+    "preds_file": "results/preds_runs/it016-20260529_184231-4dbfc0__model_cot.jsonl"
   }
 ]
