@@ -84,7 +84,7 @@
   <div class="tabs">
     <button class="tab active" data-tab="results">Results</button>
     <button class="tab" data-tab="dataset">Dataset</button>
-    <button class="tab" data-tab="datasets">Datasets</button>
+    <button class="tab" data-tab="datasets">Dataset Versions</button>
     <button class="tab" data-tab="findings">Findings</button>
   </div>
 </header>
@@ -247,17 +247,40 @@ function renderExamples(i,k){
     </div><pre>${(x.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</pre></div>`).join('')
     + (list.length>200?`<div class="sub">(showing first 200 of ${list.length})</div>`:'')) || '<div class="sub">none</div>';
 }
+function modelClass(r){
+  if (/regex/i.test(r.system)) return 'regex';
+  const trained = (r.cfg.model||'').startsWith('tinker://');
+  return (trained ? 'trained' : 'frozen') + (r.cfg.cot ? '+CoT' : '');
+}
 function drawTrend(){
-  const bySys={}; RROWS.forEach(r=>{(bySys[r.system]=bySys[r.system]||[]).push([r.iteration,r.f1]);});
-  const W=640,H=160,pad=30, its=[...new Set(RROWS.map(r=>r.iteration))], maxIt=Math.max(1,...its);
-  const x=it=>pad+(W-2*pad)*(maxIt>1?(it-1)/(maxIt-1):0.5), y=f=>H-pad-(H-2*pad)*f, colors=['#58a6ff','#3fb950','#d29922','#f85149','#bc8cff'];
-  let paths='',legend='',ci=0;
-  for(const [sys,pts] of Object.entries(bySys)){pts.sort((a,b)=>a[0]-b[0]);const c=colors[ci%colors.length];ci++;
-    const d=pts.map((p,i)=>`${i?'L':'M'}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' ');
-    const dots=pts.map(p=>`<circle cx="${x(p[0]).toFixed(1)}" cy="${y(p[1]).toFixed(1)}" r="3" fill="${c}"/>`).join('');
-    paths+=`<path d="${d}" fill="none" stroke="${c}" stroke-width="2"/>${dots}`; legend+=`<span class="legend" style="color:${c}">■ ${sys.length>26?sys.slice(0,26)+'…':sys}</span>`;}
-  const grid=[0,.25,.5,.75,1].map(f=>`<line x1="${pad}" y1="${y(f)}" x2="${W-pad}" y2="${y(f)}" stroke="#232833"/><text x="4" y="${y(f)+3}" fill="#9aa4b2" font-size="10">${(100*f).toFixed(0)}</text>`).join('');
-  $('trend').innerHTML=`<svg width="${W}" height="${H}">${grid}${paths}</svg><div>F1 by iteration ${legend}</div>`;
+  // x = dataset version (ordered); one line per model class (frozen traces benchmark
+  // difficulty; trained points sit above it). Latest iteration wins per (class, version).
+  const cats=[...new Set(RROWS.map(r=>r.dataset_version).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  if(!cats.length){ $('trend').innerHTML=''; return; }
+  const ci_=Object.fromEntries(cats.map((c,i)=>[c,i]));
+  const byClass={};
+  RROWS.filter(r=>r.dataset_version).forEach(r=>{
+    const cls=modelClass(r); byClass[cls]=byClass[cls]||{};
+    const cur=byClass[cls][r.dataset_version];
+    if(!cur || r.iteration>cur.it) byClass[cls][r.dataset_version]={f1:r.f1,it:r.iteration};
+  });
+  const W=680,H=180,padL=34,padR=14,padT=12,padB=34, n=cats.length;
+  const x=i=>padL+(W-padL-padR)*(n>1?i/(n-1):0.5), y=f=>H-padB-(H-padT-padB)*f;
+  const colors={'frozen':'#58a6ff','frozen+CoT':'#79c0ff','trained':'#3fb950','trained+CoT':'#56d364','regex':'#8b949e'};
+  let paths='',legend='',k=0;
+  for(const [cls,byv] of Object.entries(byClass)){
+    const c=colors[cls]||['#d29922','#f85149','#bc8cff'][k++%3];
+    const pts=cats.filter(v=>byv[v]!=null).map(v=>[x(ci_[v]),y(byv[v].f1)]);
+    if(!pts.length) continue;
+    const d=pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+    const dots=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="${c}"/>`).join('');
+    paths+=`<path d="${d}" fill="none" stroke="${c}" stroke-width="2"/>${dots}`;
+    legend+=`<span class="legend" style="color:${c}">■ ${cls}</span>`;
+  }
+  const ygrid=[0,.25,.5,.75,1].map(f=>`<line x1="${padL}" y1="${y(f)}" x2="${W-padR}" y2="${y(f)}" stroke="#232833"/><text x="2" y="${y(f)+3}" fill="#9aa4b2" font-size="10">${(100*f).toFixed(0)}</text>`).join('');
+  const xlab=cats.map((v,i)=>`<text x="${x(i).toFixed(1)}" y="${H-padB+16}" fill="#9aa4b2" font-size="10" text-anchor="middle">${v.replace(/^ds-/,'')}</text>`).join('');
+  $('trend').innerHTML=`<svg width="${W}" height="${H}">${ygrid}${xlab}${paths}</svg><div>F1 by dataset version ${legend}</div>`;
 }
 document.querySelectorAll('#rtbl th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k; if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=(k==='date'||k==='iteration')?-1:1;} renderResults();});
 
