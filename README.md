@@ -83,9 +83,19 @@ python eval/run_eval.py --data data/it/test.jsonl,data/real/test_realistic.jsonl
     --model tinker://<ckpt> --dataset-version ds-v4 --note "SFT v1"
 ```
 
-## Status
+## Status / results
 
-Frozen-model F1 curve (benchmark difficulty, model fixed): **ds-v0 98.2 → v1 96.2 → v2 95.8 →
-v3 93.3**, then real data exposes the synthetic→real gap (real F1 ~70). First **SFT** on ds-v4 lifts
-the model: counterfactual specificity 48→95, typo-noise specificity 74→100, real recall 80→100
-(synthetic F1 92.8→99.4, real 70→74). Next: CoT SFT, then on-policy distillation, then ablations.
+See **[DELIVERABLES.md](DELIVERABLES.md)** for the full summary (datasets, eval, ablation table,
+findings, next steps). Headline:
+
+- 8 dataset versions (ds-v0→ds-v7); frozen-model F1 **98→75** as the benchmark hardened + added real
+  data (model fixed = benchmark-difficulty curve).
+- **SFT (LoRA) is the production win** — solves every slice except PII-prose.
+- **CoT and STaR thinking aren't worth it** (templated CoT pattern-matches; STaR rejection-sampling
+  drops the hard cases). **OPD is operating-point-dependent**: a few-shot 27B teacher wins on the
+  real/PII-heavy distribution (ds-v7 real F1 62→74) but at a counterfactual + cost trade.
+- **Label audit** (regex+judge+human, κ=0.906) found/fixed systematic label errors; label quality
+  itself moves the headline metric.
+
+ds-v7 production menu: **SFT v4** (counterfactual-critical/cheap) · **OPD v8** (balanced) ·
+**OPD v7** (max real precision). No single model dominates all slices — pick by operating point.
