@@ -20,8 +20,8 @@ ROOT = Path(__file__).resolve().parent.parent
 DSPATH = ROOT / "results" / "datasets.jsonl"
 
 
-def load_rows(include_real=True):
-    dirs = [ROOT / "data" / "it"]
+def load_rows(domain="it", include_real=True):
+    dirs = [ROOT / "data" / domain]
     if include_real:
         dirs.append(ROOT / "data" / "real")
     splits, rows = {}, []
@@ -59,9 +59,10 @@ def main():
     ap.add_argument("--version", required=True, help="dataset version label, e.g. ds-v4")
     ap.add_argument("--note", default="")
     ap.add_argument("--no-real", action="store_true", help="synthetic only")
+    ap.add_argument("--domain", default="it")
     args = ap.parse_args()
 
-    rows, splits = load_rows(include_real=not args.no_real)
+    rows, splits = load_rows(domain=args.domain, include_real=not args.no_real)
     rec = dict(
         version=args.version,
         date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),

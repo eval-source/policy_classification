@@ -1,61 +1,49 @@
 [
   {
     "name": "MODEL Qwen/Qwen3.5-4B",
-    "n": 90,
-    "precision": 1.0,
-    "recall": 1.0,
-    "f1": 1.0,
-    "accuracy": 1.0,
+    "n": 79,
+    "precision": 0.975609756097561,
+    "recall": 0.9523809523809523,
+    "f1": 0.963855421686747,
+    "accuracy": 0.9620253164556962,
     "f1_ci": [
-      1.0,
+      0.9135802469135802,
       1.0
     ],
-    "tp": 52,
-    "fp": 0,
-    "fn": 0,
-    "tn": 38,
+    "tp": 40,
+    "fp": 1,
+    "fn": 2,
+    "tn": 36,
     "unparsed": 0,
     "by_subcategory": {
-      "casual_legal_reference": {
-        "n": 3,
-        "n_pos": 0,
-        "n_neg": 3,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "compliance_obligation": {
-        "n": 11,
-        "n_pos": 10,
+      "brand_campaign_copy": {
+        "n": 7,
+        "n_pos": 6,
         "n_neg": 1,
         "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
+        "recall": 0.8333333333333334,
+        "f1": 0.9090909090909091,
+        "accuracy": 0.8571428571428571,
         "specificity": 1.0,
         "fp": 0,
-        "fn": 0
+        "fn": 1
       },
-      "contract": {
-        "n": 11,
-        "n_pos": 8,
-        "n_neg": 3,
+      "efficacy_competitive_claim": {
+        "n": 29,
+        "n_pos": 22,
+        "n_neg": 7,
         "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
+        "recall": 0.9545454545454546,
+        "f1": 0.9767441860465117,
+        "accuracy": 0.9655172413793104,
         "specificity": 1.0,
         "fp": 0,
-        "fn": 0
+        "fn": 1
       },
-      "eula_tos_privacy": {
-        "n": 8,
+      "generic_marketing": {
+        "n": 11,
         "n_pos": 0,
-        "n_neg": 8,
+        "n_neg": 11,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -64,19 +52,7 @@
         "fp": 0,
         "fn": 0
       },
-      "indemnity_liability": {
-        "n": 18,
-        "n_pos": 12,
-        "n_neg": 6,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "legal_dept_logistics": {
+      "internal_logistics": {
         "n": 5,
         "n_pos": 0,
         "n_neg": 5,
@@ -88,10 +64,10 @@
         "fp": 0,
         "fn": 0
       },
-      "legal_news": {
-        "n": 8,
+      "market_fact": {
+        "n": 4,
         "n_pos": 0,
-        "n_neg": 8,
+        "n_neg": 4,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -100,107 +76,7 @@
         "fp": 0,
         "fn": 0
       },
-      "nda_confidentiality": {
-        "n": 10,
-        "n_pos": 9,
-        "n_neg": 1,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "privilege_litigation": {
-        "n": 16,
-        "n_pos": 13,
-        "n_neg": 3,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      }
-    },
-    "by_difficulty": {
-      "easy": {
-        "n": 41,
-        "n_pos": 23,
-        "n_neg": 18,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "hard": {
-        "n": 49,
-        "n_pos": 29,
-        "n_neg": 20,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      }
-    },
-    "by_hardening": {
-      "casual": {
-        "n": 2,
-        "n_pos": 2,
-        "n_neg": 0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": null,
-        "fp": 0,
-        "fn": 0
-      },
-      "core": {
-        "n": 41,
-        "n_pos": 23,
-        "n_neg": 18,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "counterfactual": {
-        "n": 31,
-        "n_pos": 17,
-        "n_neg": 14,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "intent_only": {
-        "n": 10,
-        "n_pos": 10,
-        "n_neg": 0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": null,
-        "fp": 0,
-        "fn": 0
-      },
-      "near_boundary": {
+      "personal_opinion_ad": {
         "n": 6,
         "n_pos": 0,
         "n_neg": 6,
@@ -211,12 +87,124 @@
         "specificity": 1.0,
         "fp": 0,
         "fn": 0
+      },
+      "press_pr": {
+        "n": 10,
+        "n_pos": 8,
+        "n_neg": 2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "pricing_promo": {
+        "n": 7,
+        "n_pos": 6,
+        "n_neg": 1,
+        "precision": 0.8571428571428571,
+        "recall": 1.0,
+        "f1": 0.923076923076923,
+        "accuracy": 0.8571428571428571,
+        "specificity": 0.0,
+        "fp": 1,
+        "fn": 0
+      }
+    },
+    "by_difficulty": {
+      "easy": {
+        "n": 39,
+        "n_pos": 22,
+        "n_neg": 17,
+        "precision": 1.0,
+        "recall": 0.9545454545454546,
+        "f1": 0.9767441860465117,
+        "accuracy": 0.9743589743589743,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 1
+      },
+      "hard": {
+        "n": 40,
+        "n_pos": 20,
+        "n_neg": 20,
+        "precision": 0.95,
+        "recall": 0.95,
+        "f1": 0.9500000000000001,
+        "accuracy": 0.95,
+        "specificity": 0.95,
+        "fp": 1,
+        "fn": 1
+      }
+    },
+    "by_hardening": {
+      "casual": {
+        "n": 3,
+        "n_pos": 2,
+        "n_neg": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "core": {
+        "n": 39,
+        "n_pos": 22,
+        "n_neg": 17,
+        "precision": 1.0,
+        "recall": 0.9545454545454546,
+        "f1": 0.9767441860465117,
+        "accuracy": 0.9743589743589743,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 1
+      },
+      "counterfactual": {
+        "n": 22,
+        "n_pos": 11,
+        "n_neg": 11,
+        "precision": 0.9166666666666666,
+        "recall": 1.0,
+        "f1": 0.9565217391304348,
+        "accuracy": 0.9545454545454546,
+        "specificity": 0.9090909090909091,
+        "fp": 1,
+        "fn": 0
+      },
+      "intent_only": {
+        "n": 7,
+        "n_pos": 7,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 0.8571428571428571,
+        "f1": 0.923076923076923,
+        "accuracy": 0.8571428571428571,
+        "specificity": null,
+        "fp": 0,
+        "fn": 1
+      },
+      "near_boundary": {
+        "n": 8,
+        "n_pos": 0,
+        "n_neg": 8,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
       }
     },
     "usage": {
-      "prompt_tokens": 22647,
-      "completion_tokens": 232,
-      "est_cost_usd": 0.002358,
+      "prompt_tokens": 17827,
+      "completion_tokens": 199,
+      "est_cost_usd": 0.001862,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -224,6 +212,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it034-20260531_010956-5b72ff__model.jsonl"
+    "preds_file": "results/preds_runs/it035-20260531_011243-1802cc__model.jsonl"
   }
 ]
