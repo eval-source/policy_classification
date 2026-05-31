@@ -1,49 +1,49 @@
 [
   {
-    "name": "MODEL Qwen/Qwen3.5-4B",
-    "n": 6,
-    "precision": 0.5,
-    "recall": 1.0,
-    "f1": 0.6666666666666666,
-    "accuracy": 0.6666666666666666,
+    "name": "REGEX baseline",
+    "n": 74,
+    "precision": 1.0,
+    "recall": 0.375,
+    "f1": 0.5454545454545454,
+    "accuracy": 0.6621621621621622,
     "f1_ci": [
-      0.0,
-      1.0
+      0.37735849056603776,
+      0.6984126984126985
     ],
-    "tp": 2,
-    "fp": 2,
-    "fn": 0,
-    "tn": 2,
+    "tp": 15,
+    "fp": 0,
+    "fn": 25,
+    "tn": 34,
     "unparsed": 0,
     "by_subcategory": {
-      "secret_credential": {
-        "n": 3,
-        "n_pos": 2,
-        "n_neg": 1,
-        "precision": 0.6666666666666666,
-        "recall": 1.0,
-        "f1": 0.8,
-        "accuracy": 0.6666666666666666,
-        "specificity": 0.0,
-        "fp": 1,
-        "fn": 0
-      },
-      "security_news": {
-        "n": 1,
-        "n_pos": 0,
-        "n_neg": 1,
+      "brand_campaign_copy": {
+        "n": 12,
+        "n_pos": 10,
+        "n_neg": 2,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 0.0,
-        "specificity": 0.0,
-        "fp": 1,
-        "fn": 0
+        "accuracy": 0.16666666666666666,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 10
       },
-      "support_chatter": {
-        "n": 1,
+      "efficacy_competitive_claim": {
+        "n": 16,
+        "n_pos": 13,
+        "n_neg": 3,
+        "precision": 1.0,
+        "recall": 0.6153846153846154,
+        "f1": 0.761904761904762,
+        "accuracy": 0.6875,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 5
+      },
+      "generic_marketing": {
+        "n": 6,
         "n_pos": 0,
-        "n_neg": 1,
+        "n_neg": 6,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -52,10 +52,146 @@
         "fp": 0,
         "fn": 0
       },
-      "vendor_mention": {
-        "n": 1,
+      "internal_logistics": {
+        "n": 3,
         "n_pos": 0,
+        "n_neg": 3,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "market_fact": {
+        "n": 8,
+        "n_pos": 0,
+        "n_neg": 8,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "personal_opinion_ad": {
+        "n": 7,
+        "n_pos": 0,
+        "n_neg": 7,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "press_pr": {
+        "n": 10,
+        "n_pos": 7,
+        "n_neg": 3,
+        "precision": 1.0,
+        "recall": 0.7142857142857143,
+        "f1": 0.8333333333333333,
+        "accuracy": 0.8,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 2
+      },
+      "pricing_promo": {
+        "n": 12,
+        "n_pos": 10,
+        "n_neg": 2,
+        "precision": 1.0,
+        "recall": 0.2,
+        "f1": 0.33333333333333337,
+        "accuracy": 0.3333333333333333,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 8
+      }
+    },
+    "by_difficulty": {
+      "easy": {
+        "n": 40,
+        "n_pos": 22,
+        "n_neg": 18,
+        "precision": 1.0,
+        "recall": 0.4090909090909091,
+        "f1": 0.5806451612903226,
+        "accuracy": 0.675,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 13
+      },
+      "hard": {
+        "n": 34,
+        "n_pos": 18,
+        "n_neg": 16,
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "accuracy": 0.6470588235294118,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 12
+      }
+    },
+    "by_hardening": {
+      "casual": {
+        "n": 3,
+        "n_pos": 2,
         "n_neg": 1,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.3333333333333333,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 2
+      },
+      "core": {
+        "n": 40,
+        "n_pos": 22,
+        "n_neg": 18,
+        "precision": 1.0,
+        "recall": 0.4090909090909091,
+        "f1": 0.5806451612903226,
+        "accuracy": 0.675,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 13
+      },
+      "counterfactual": {
+        "n": 18,
+        "n_pos": 8,
+        "n_neg": 10,
+        "precision": 1.0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "accuracy": 0.6666666666666666,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 6
+      },
+      "intent_only": {
+        "n": 8,
+        "n_pos": 8,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1": 0.6666666666666666,
+        "accuracy": 0.5,
+        "specificity": null,
+        "fp": 0,
+        "fn": 4
+      },
+      "near_boundary": {
+        "n": 5,
+        "n_pos": 0,
+        "n_neg": 5,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -65,36 +201,193 @@
         "fn": 0
       }
     },
-    "by_difficulty": {
-      "easy": {
-        "n": 2,
-        "n_pos": 0,
+    "usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "est_cost_usd": 0.0
+    },
+    "preds_file": "results/preds_runs/it033-20260531_005044-e4661f__regex.jsonl"
+  },
+  {
+    "name": "MODEL Qwen/Qwen3.5-4B",
+    "n": 74,
+    "precision": 0.9523809523809523,
+    "recall": 1.0,
+    "f1": 0.975609756097561,
+    "accuracy": 0.972972972972973,
+    "f1_ci": [
+      0.9367088607594937,
+      1.0
+    ],
+    "tp": 40,
+    "fp": 2,
+    "fn": 0,
+    "tn": 32,
+    "unparsed": 0,
+    "by_subcategory": {
+      "brand_campaign_copy": {
+        "n": 12,
+        "n_pos": 10,
         "n_neg": 2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "efficacy_competitive_claim": {
+        "n": 16,
+        "n_pos": 13,
+        "n_neg": 3,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "generic_marketing": {
+        "n": 6,
+        "n_pos": 0,
+        "n_neg": 6,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "internal_logistics": {
+        "n": 3,
+        "n_pos": 0,
+        "n_neg": 3,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "market_fact": {
+        "n": 8,
+        "n_pos": 0,
+        "n_neg": 8,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "personal_opinion_ad": {
+        "n": 7,
+        "n_pos": 0,
+        "n_neg": 7,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "press_pr": {
+        "n": 10,
+        "n_pos": 7,
+        "n_neg": 3,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "pricing_promo": {
+        "n": 12,
+        "n_pos": 10,
+        "n_neg": 2,
+        "precision": 0.8333333333333334,
+        "recall": 1.0,
+        "f1": 0.9090909090909091,
+        "accuracy": 0.8333333333333334,
+        "specificity": 0.0,
+        "fp": 2,
+        "fn": 0
+      }
+    },
+    "by_difficulty": {
+      "easy": {
+        "n": 40,
+        "n_pos": 22,
+        "n_neg": 18,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
         "accuracy": 1.0,
         "specificity": 1.0,
         "fp": 0,
         "fn": 0
       },
       "hard": {
-        "n": 4,
-        "n_pos": 2,
-        "n_neg": 2,
-        "precision": 0.5,
+        "n": 34,
+        "n_pos": 18,
+        "n_neg": 16,
+        "precision": 0.9,
         "recall": 1.0,
-        "f1": 0.6666666666666666,
-        "accuracy": 0.5,
-        "specificity": 0.0,
+        "f1": 0.9473684210526316,
+        "accuracy": 0.9411764705882353,
+        "specificity": 0.875,
         "fp": 2,
         "fn": 0
       }
     },
     "by_hardening": {
       "casual": {
-        "n": 1,
-        "n_pos": 1,
+        "n": 3,
+        "n_pos": 2,
+        "n_neg": 1,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "core": {
+        "n": 40,
+        "n_pos": 22,
+        "n_neg": 18,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "counterfactual": {
+        "n": 18,
+        "n_pos": 8,
+        "n_neg": 10,
+        "precision": 0.8,
+        "recall": 1.0,
+        "f1": 0.888888888888889,
+        "accuracy": 0.8888888888888888,
+        "specificity": 0.8,
+        "fp": 2,
+        "fn": 0
+      },
+      "intent_only": {
+        "n": 8,
+        "n_pos": 8,
         "n_neg": 0,
         "precision": 1.0,
         "recall": 1.0,
@@ -104,10 +397,10 @@
         "fp": 0,
         "fn": 0
       },
-      "core": {
-        "n": 2,
+      "near_boundary": {
+        "n": 5,
         "n_pos": 0,
-        "n_neg": 2,
+        "n_neg": 5,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -115,48 +408,12 @@
         "specificity": 1.0,
         "fp": 0,
         "fn": 0
-      },
-      "counterfactual": {
-        "n": 1,
-        "n_pos": 0,
-        "n_neg": 1,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 0.0,
-        "specificity": 0.0,
-        "fp": 1,
-        "fn": 0
-      },
-      "near_boundary": {
-        "n": 1,
-        "n_pos": 0,
-        "n_neg": 1,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 0.0,
-        "specificity": 0.0,
-        "fp": 1,
-        "fn": 0
-      },
-      "obfuscation": {
-        "n": 1,
-        "n_pos": 1,
-        "n_neg": 0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": null,
-        "fp": 0,
-        "fn": 0
       }
     },
     "usage": {
-      "prompt_tokens": 1588,
-      "completion_tokens": 16,
-      "est_cost_usd": 0.000165,
+      "prompt_tokens": 16760,
+      "completion_tokens": 190,
+      "est_cost_usd": 0.001752,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -164,6 +421,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it033-20260531_003935-ed7662__model.jsonl"
+    "preds_file": "results/preds_runs/it033-20260531_005044-e4661f__model.jsonl"
   }
 ]

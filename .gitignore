@@ -37,3 +37,7 @@ train/runs/
 
 # label-audit queue: contains real-data text snippets (PII / secrets)
 results/label_audit.jsonl
+
+# legal/marketing generated datasets (reproducible from seeds)
+data/legal/*.jsonl
+data/marketing/*.jsonl
