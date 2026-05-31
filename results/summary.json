@@ -1,49 +1,37 @@
 [
   {
-    "name": "MODEL tinker://0de8fc1a-0e30-521c-ae05-9b882e66c83c:train:0/sampler_weights/final",
-    "n": 150,
-    "precision": 0.9726027397260274,
-    "recall": 0.9466666666666667,
-    "f1": 0.9594594594594594,
-    "accuracy": 0.96,
+    "name": "MODEL tinker://2a2a6ffb-1c44-5973-9377-d156568330d9:train:0/sampler_weights/final",
+    "n": 156,
+    "precision": 0.8863636363636364,
+    "recall": 1.0,
+    "f1": 0.9397590361445783,
+    "accuracy": 0.9358974358974359,
     "f1_ci": [
-      0.9230769230769231,
-      0.9871794871794872
+      0.8987341772151899,
+      0.9723756906077349
     ],
-    "tp": 71,
-    "fp": 2,
-    "fn": 4,
-    "tn": 73,
+    "tp": 78,
+    "fp": 10,
+    "fn": 0,
+    "tn": 68,
     "unparsed": 0,
     "by_subcategory": {
-      "brand_campaign_copy": {
-        "n": 75,
-        "n_pos": 75,
+      "contract": {
+        "n": 70,
+        "n_pos": 70,
         "n_neg": 0,
         "precision": 1.0,
-        "recall": 0.9466666666666667,
-        "f1": 0.9726027397260273,
-        "accuracy": 0.9466666666666667,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
         "specificity": null,
         "fp": 0,
-        "fn": 4
-      },
-      "market_fact": {
-        "n": 43,
-        "n_pos": 0,
-        "n_neg": 43,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 0.9534883720930233,
-        "specificity": 0.9534883720930233,
-        "fp": 2,
         "fn": 0
       },
-      "opinion_review": {
-        "n": 32,
+      "eula_tos_privacy": {
+        "n": 23,
         "n_pos": 0,
-        "n_neg": 32,
+        "n_neg": 23,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -51,40 +39,100 @@
         "specificity": 1.0,
         "fp": 0,
         "fn": 0
+      },
+      "indemnity_liability": {
+        "n": 2,
+        "n_pos": 2,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 0
+      },
+      "legal_news": {
+        "n": 30,
+        "n_pos": 0,
+        "n_neg": 30,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "legislation": {
+        "n": 25,
+        "n_pos": 0,
+        "n_neg": 25,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.6,
+        "specificity": 0.6,
+        "fp": 10,
+        "fn": 0
+      },
+      "nda_confidentiality": {
+        "n": 2,
+        "n_pos": 2,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 0
+      },
+      "privilege_litigation": {
+        "n": 4,
+        "n_pos": 4,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 0
       }
     },
     "by_difficulty": {
       "natural": {
-        "n": 150,
-        "n_pos": 75,
-        "n_neg": 75,
-        "precision": 0.9726027397260274,
-        "recall": 0.9466666666666667,
-        "f1": 0.9594594594594594,
-        "accuracy": 0.96,
-        "specificity": 0.9733333333333334,
-        "fp": 2,
-        "fn": 4
+        "n": 156,
+        "n_pos": 78,
+        "n_neg": 78,
+        "precision": 0.8863636363636364,
+        "recall": 1.0,
+        "f1": 0.9397590361445783,
+        "accuracy": 0.9358974358974359,
+        "specificity": 0.8717948717948718,
+        "fp": 10,
+        "fn": 0
       }
     },
     "by_hardening": {
       "real": {
-        "n": 150,
-        "n_pos": 75,
-        "n_neg": 75,
-        "precision": 0.9726027397260274,
-        "recall": 0.9466666666666667,
-        "f1": 0.9594594594594594,
-        "accuracy": 0.96,
-        "specificity": 0.9733333333333334,
-        "fp": 2,
-        "fn": 4
+        "n": 156,
+        "n_pos": 78,
+        "n_neg": 78,
+        "precision": 0.8863636363636364,
+        "recall": 1.0,
+        "f1": 0.9397590361445783,
+        "accuracy": 0.9358974358974359,
+        "specificity": 0.8717948717948718,
+        "fp": 10,
+        "fn": 0
       }
     },
     "usage": {
-      "prompt_tokens": 37470,
-      "completion_tokens": 373,
-      "est_cost_usd": 0.003896,
+      "prompt_tokens": 53562,
+      "completion_tokens": 400,
+      "est_cost_usd": 0.005516,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -92,6 +140,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it051-20260531_111724-eb6ccf__model.jsonl"
+    "preds_file": "results/preds_runs/it057-20260531_142133-0afbda__model.jsonl"
   }
 ]
