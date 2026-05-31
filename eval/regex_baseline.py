@@ -19,6 +19,12 @@ PATTERNS = {
     "conn_string_pw": re.compile(r"\b(?:postgres|postgresql|mysql|redis|mongodb)://[^\s:@/]+:[^\s:@/]+@", re.I),
     "generic_hex_key": re.compile(r"\b[0-9a-f]{32,}\b"),
     "ssn": re.compile(r"\b[0-9]{3}-[0-9]{2}-[0-9]{4}\b"),
+    # explicit password disclosure: "password: <value>" where the value is secret-like —
+    # >=7 chars with BOTH a digit AND a special char (so 'hunter2', '***', '<password>',
+    # 'reset' don't match). Catches leaks the other patterns miss (audit f028).
+    "password_kv": re.compile(
+        r"\bpass(?:word|wd|phrase)?['\"]?\s*[:=]\s*['\"]?"  # allow quoted JSON key: \"password\":
+        r"(?=[^\s'\"]*[0-9])(?=[^\s'\"]*[!@#$%^&*\]\[)(\-_=+/])[^\s'\"]{7,}", re.I),
 }
 
 # Strings that signal a placeholder, used to suppress false hits on tutorials.
@@ -31,7 +37,7 @@ PLACEHOLDER_HINTS = re.compile(
 def predict(text: str):
     """Return (label, matched_pattern_names)."""
     matches = [name for name, pat in PATTERNS.items() if pat.search(text)]
-    # A long hex string inside an obvious placeholder block is suppressed.
-    if matches == ["generic_hex_key"] and PLACEHOLDER_HINTS.search(text):
-        matches = []
+    # Suppress weak/ambiguous matches inside an obvious placeholder/example block.
+    if PLACEHOLDER_HINTS.search(text):
+        matches = [m for m in matches if m not in ("generic_hex_key", "password_kv")]
     return (1 if matches else 0), matches

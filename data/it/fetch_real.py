@@ -35,20 +35,33 @@ import regex_baseline  # reuse the deterministic secret detector
 ROOT = Path(__file__).resolve().parent.parent.parent
 OUT = ROOT / "data" / "real"
 
-# PII rubric (v2): a text is in-scope "PII handling" if it discloses HIGH-sensitivity PII,
-# OR it is a PERSONAL RECORD — multiple distinct identifiers about a person (name + DOB +
-# address + phone, etc.). A lone/casual identifier (just a first name, or one email) is NOT.
-# (v1 only fired on HIGH_SENS, which mislabeled multi-identifier records as negative and
-# capped real precision — see finding f015.)
+# PII rubric (v3 — label-audit fix f028): in-scope "PII handling" if HIGH-sensitivity PII, OR
+# a PERSONAL RECORD = enough SENSITIVE/STRUCTURAL identifiers about a person (address, phone,
+# DOB, ID/account numbers...). Crucially, bare NAMES no longer count — v2 counted named
+# entities, so name-heavy NARRATIVE (comments, strategy docs) was wrongly labeled a record.
 HIGH_SENS = {
     "SSN", "SOCIALNUMBER", "PASSPORT", "DRIVERLICENSE", "IDCARD", "TAXNUMBER",
     "CREDITCARDNUMBER", "CREDITCARDCVV", "IBAN", "BIC", "ACCOUNTNUMBER", "PIN",
     "PASSWORD", "MEDICAL", "BITCOINADDRESS", "ETHEREUMADDRESS", "VEHICLEVIN",
     "PHONEIMEI", "MASKEDNUMBER",
 }
-# entity labels that don't, by themselves, identify a person (don't count toward "record")
-NON_IDENTIFIER = {"TIME", "URL", "CURRENCY", "AMOUNT", "ORDINALDIRECTION", "JOBTYPE"}
-RECORD_MIN_IDENTIFIERS = 3  # >= this many distinct identifier types => a personal record
+# substrings marking a SENSITIVE/STRUCTURAL identifier (not a bare name/date/job)
+STRUCTURAL_KEYS = ("STREET", "CITY", "STATE", "ZIP", "POSTCODE", "POSTAL", "BUILDING",
+                   "ADDRESS", "PHONE", "EMAIL", "DOB", "BIRTH", "ACCOUNT", "LICENSE",
+                   "PASSPORT", "SSN", "IDCARD", "STUDENT", "EMPLOYEE", "CUSTOMER",
+                   "NATIONAL", "TAX", "IPV", "IBAN", "CREDIT")
+NAME_LABELS = {"FIRSTNAME", "LASTNAME", "SURNAME", "MIDDLENAME", "FULLNAME", "GIVENNAME", "NAME"}
+
+
+def pii_label(labels):
+    """Return (positive: bool, confidence) for a set of uppercased PII entity labels."""
+    if labels & HIGH_SENS:
+        return True, "high"
+    n_struct = sum(1 for L in labels if any(k in L for k in STRUCTURAL_KEYS))
+    has_name = any(L in NAME_LABELS for L in labels)
+    if n_struct >= 2 or (has_name and n_struct >= 1):
+        return True, "med"     # a genuine personal record (name+address, address+phone, ...)
+    return False, "low"        # lone/casual identifier or name-only narrative
 # A support-ticket positive needs BOTH a security-ish tag AND incident language in the body.
 # (Verification showed a tag alone is too loose — it swept in outages, bug reports, and
 # security-compliance *inquiries*; the incident-keyword gate drops those "request" tickets.)
@@ -86,16 +99,12 @@ def from_pii(limit, rng):
         if not text:
             continue
         labels = {m.get("label", "").upper() for m in (row.get("privacy_mask") or [])}
-        n_identifiers = len(labels - NON_IDENTIFIER)
         hit_secret, _ = regex_override(text)
         if hit_secret:
             lab, sub, conf, src = 1, "secret_credential", "high", "regex"
-        elif labels & HIGH_SENS:
-            lab, sub, conf, src = 1, "pii_handling", "high", "metadata"  # high-sensitivity PII
-        elif n_identifiers >= RECORD_MIN_IDENTIFIERS:
-            lab, sub, conf, src = 1, "pii_handling", "med", "metadata"   # multi-identifier record
         else:
-            lab, sub, conf, src = 0, "pii_handling", "low", "metadata"   # lone/casual identifier
+            is_pos, conf = pii_label(labels)
+            lab, sub, src = (1 if is_pos else 0), "pii_handling", "metadata"
         out.append((text, lab, sub, conf, src, "prose", "ai4privacy/pii-masking-300k"))
         if len(out) >= limit:
             break

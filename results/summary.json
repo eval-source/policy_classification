@@ -1,19 +1,19 @@
 [
   {
     "name": "MODEL Qwen/Qwen3.6-27B",
-    "n": 659,
-    "precision": 0.9090909090909091,
-    "recall": 0.9459459459459459,
-    "f1": 0.9271523178807948,
-    "accuracy": 0.9666160849772383,
+    "n": 673,
+    "precision": 0.8734177215189873,
+    "recall": 0.92,
+    "f1": 0.896103896103896,
+    "accuracy": 0.9524517087667161,
     "f1_ci": [
-      0.8933333333333332,
-      0.9550173010380624
+      0.8580645161290322,
+      0.9314079422382672
     ],
-    "tp": 140,
-    "fp": 14,
-    "fn": 8,
-    "tn": 497,
+    "tp": 138,
+    "fp": 20,
+    "fn": 12,
+    "tn": 503,
     "unparsed": 0,
     "by_subcategory": {
       "abstract_question": {
@@ -77,16 +77,16 @@
         "fn": 0
       },
       "pii_handling": {
-        "n": 96,
-        "n_pos": 60,
-        "n_neg": 36,
-        "precision": 0.9629629629629629,
-        "recall": 0.8666666666666667,
-        "f1": 0.912280701754386,
-        "accuracy": 0.8958333333333334,
-        "specificity": 0.9444444444444444,
-        "fp": 2,
-        "fn": 8
+        "n": 104,
+        "n_pos": 56,
+        "n_neg": 48,
+        "precision": 0.8490566037735849,
+        "recall": 0.8035714285714286,
+        "f1": 0.8256880733944955,
+        "accuracy": 0.8173076923076923,
+        "specificity": 0.8333333333333334,
+        "fp": 8,
+        "fn": 11
       },
       "public_snippet": {
         "n": 105,
@@ -101,13 +101,13 @@
         "fn": 0
       },
       "secret_credential": {
-        "n": 49,
-        "n_pos": 40,
+        "n": 55,
+        "n_pos": 46,
         "n_neg": 9,
-        "precision": 0.9302325581395349,
+        "precision": 0.9387755102040817,
         "recall": 1.0,
-        "f1": 0.963855421686747,
-        "accuracy": 0.9387755102040817,
+        "f1": 0.968421052631579,
+        "accuracy": 0.9454545454545454,
         "specificity": 0.6666666666666666,
         "fp": 3,
         "fn": 0
@@ -137,8 +137,8 @@
         "fn": 0
       },
       "security_policy": {
-        "n": 12,
-        "n_pos": 11,
+        "n": 13,
+        "n_pos": 12,
         "n_neg": 1,
         "precision": 1.0,
         "recall": 1.0,
@@ -185,16 +185,16 @@
         "fn": 0
       },
       "vuln_incident": {
-        "n": 23,
-        "n_pos": 20,
+        "n": 22,
+        "n_pos": 19,
         "n_neg": 3,
         "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
+        "recall": 0.9473684210526315,
+        "f1": 0.972972972972973,
+        "accuracy": 0.9545454545454546,
         "specificity": 1.0,
         "fp": 0,
-        "fn": 0
+        "fn": 1
       }
     },
     "by_difficulty": {
@@ -223,16 +223,16 @@
         "fn": 0
       },
       "natural": {
-        "n": 487,
-        "n_pos": 58,
-        "n_neg": 429,
-        "precision": 0.8333333333333334,
-        "recall": 0.8620689655172413,
-        "f1": 0.847457627118644,
-        "accuracy": 0.9630390143737166,
-        "specificity": 0.9766899766899767,
-        "fp": 10,
-        "fn": 8
+        "n": 501,
+        "n_pos": 60,
+        "n_neg": 441,
+        "precision": 0.75,
+        "recall": 0.8,
+        "f1": 0.7741935483870969,
+        "accuracy": 0.9441117764471058,
+        "specificity": 0.963718820861678,
+        "fp": 16,
+        "fn": 12
       }
     },
     "by_hardening": {
@@ -309,22 +309,22 @@
         "fn": 0
       },
       "real": {
-        "n": 487,
-        "n_pos": 58,
-        "n_neg": 429,
-        "precision": 0.8333333333333334,
-        "recall": 0.8620689655172413,
-        "f1": 0.847457627118644,
-        "accuracy": 0.9630390143737166,
-        "specificity": 0.9766899766899767,
-        "fp": 10,
-        "fn": 8
+        "n": 501,
+        "n_pos": 60,
+        "n_neg": 441,
+        "precision": 0.75,
+        "recall": 0.8,
+        "f1": 0.7741935483870969,
+        "accuracy": 0.9441117764471058,
+        "specificity": 0.963718820861678,
+        "fp": 16,
+        "fn": 12
       }
     },
     "usage": {
-      "prompt_tokens": 582023,
-      "completion_tokens": 1472,
-      "est_cost_usd": 0.058791,
+      "prompt_tokens": 593512,
+      "completion_tokens": 1504,
+      "est_cost_usd": 0.059953,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -332,6 +332,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it026-20260530_210538-8b4156__model.jsonl"
+    "preds_file": "results/preds_runs/it027-20260530_211910-3e9042__model.jsonl"
   }
 ]
