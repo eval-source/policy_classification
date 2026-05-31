@@ -34,3 +34,6 @@ train/*.jsonl
 
 # training run artifacts (checkpoints are on Tinker; logs may echo fake-secret examples)
 train/runs/
+
+# label-audit queue: contains real-data text snippets (PII / secrets)
+results/label_audit.jsonl
