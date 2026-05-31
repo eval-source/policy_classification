@@ -28,8 +28,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _env  # noqa: F401  (loads API key)
 import random
 
-from prompts import build_messages, build_messages_fewshot, parse_label
-import regex_baseline
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root for `domains`
+import domains
 
 DEFAULT_MODEL = "Qwen/Qwen3.5-4B"
 
@@ -60,7 +60,7 @@ def encode_chat(tok, messages, cot: bool):
     return list(ids)
 
 
-def run_model(rows, model, cot, temperature, max_tokens, concurrency, fewshot=False):
+def run_model(rows, spec, model, cot, temperature, max_tokens, concurrency, fewshot=False):
     import tinker
     from tinker import types
 
@@ -70,7 +70,7 @@ def run_model(rows, model, cot, temperature, max_tokens, concurrency, fewshot=Fa
     )
 
     def build(text):
-        return build_messages_fewshot(text) if fewshot else build_messages(text, cot=cot)
+        return spec.build_messages_fewshot(text) if fewshot else spec.build_messages(text, cot=cot)
 
     def one(row):
         ids = encode_chat(tok, build(row["text"]), cot=cot)
@@ -80,7 +80,7 @@ def run_model(rows, model, cot, temperature, max_tokens, concurrency, fewshot=Fa
                 resp = sc.sample(prompt=prompt, sampling_params=params, num_samples=1).result()
                 comp = resp.sequences[0].tokens
                 out = tok.decode(comp)
-                return out, parse_label(out), len(ids), len(comp)
+                return out, spec.parse_label(out), len(ids), len(comp)
             except Exception as e:  # transient API errors -> retry
                 if attempt == 2:
                     return f"<error: {e}>", None, len(ids), 0
@@ -111,10 +111,10 @@ def estimate_cost(usage, price):
             + usage["completion_tokens"] * price["sample"]) / 1e6
 
 
-def run_regex(rows):
+def run_regex(rows, spec):
     preds, raws = [], []
     for r in rows:
-        label, matches = regex_baseline.predict(r["text"])
+        label, matches = spec.regex_predict(r["text"])
         preds.append(label)
         raws.append(",".join(matches))
     return preds, raws
@@ -242,7 +242,9 @@ def main():
     ap.add_argument("--out", default="results")
     ap.add_argument("--note", default="", help="human label for this iteration")
     ap.add_argument("--dataset-version", default="", help="dataset version this run used, e.g. ds-v4")
+    ap.add_argument("--domain", default="it", help="policy domain spec (it / legal / marketing)")
     args = ap.parse_args()
+    spec = domains.get(args.domain)
 
     # --data accepts one or more comma-separated files (rows keep their own `source` field,
     # so a combined run yields a synthetic-vs-real slice).
@@ -263,7 +265,7 @@ def main():
     summaries = []
 
     if args.mode in ("regex", "both"):
-        preds, raws = run_regex(rows)
+        preds, raws = run_regex(rows, spec)
         s = print_report("REGEX baseline", rows, y_true, preds, raws)
         s["usage"] = dict(prompt_tokens=0, completion_tokens=0, est_cost_usd=0.0)
         s["preds_file"] = _dump(args.out, "regex", run_id, rows, y_true, preds, raws)
@@ -272,7 +274,7 @@ def main():
     if args.mode in ("model", "both"):
         tag = f"model{'_cot' if args.cot else ''}"
         preds, raws, usage = run_model(
-            rows, args.model, args.cot, args.temperature, args.max_tokens, args.concurrency,
+            rows, spec, args.model, args.cot, args.temperature, args.max_tokens, args.concurrency,
             fewshot=args.fewshot,
         )
         price, confirmed = load_prices(args.model)

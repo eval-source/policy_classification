@@ -23,8 +23,8 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "eval"))
-import regex_baseline  # noqa: E402
+sys.path.insert(0, str(ROOT))
+import domains  # noqa: E402
 
 
 def cohen_kappa(pairs):
@@ -43,8 +43,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default="data/it/test.jsonl,data/real/test_realistic.jsonl")
     ap.add_argument("--judge-preds", required=True)
+    ap.add_argument("--domain", default="it")
     ap.add_argument("--out", default="results/label_audit.jsonl")
     args = ap.parse_args()
+    spec = domains.get(args.domain)
 
     rows = {}
     for p in args.data.split(","):
@@ -62,7 +64,7 @@ def main():
         if rid not in judge or judge[rid] is None:
             continue
         lab = r["label"]; jpred = judge[rid]
-        rpred = regex_baseline.predict(r["text"])[0]
+        rpred = spec.regex_predict(r["text"])[0]
         lj_pairs.append((lab, jpred))
         rec = dict(id=rid, source=r.get("source", "synthetic"),
                    subcategory=r["subcategory"], hardening=r.get("hardening", "core"),

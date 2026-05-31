@@ -1,46 +1,46 @@
 [
   {
-    "name": "MODEL tinker://8a98e9ef-1b93-5d49-a211-b2111305b32f:train:0/sampler_weights/final +CoT",
-    "n": 671,
-    "precision": 0.75,
-    "recall": 0.9463087248322147,
-    "f1": 0.8367952522255192,
-    "accuracy": 0.9180327868852459,
+    "name": "MODEL Qwen/Qwen3.5-4B",
+    "n": 6,
+    "precision": 0.5,
+    "recall": 1.0,
+    "f1": 0.6666666666666666,
+    "accuracy": 0.6666666666666666,
     "f1_ci": [
-      0.7896440129449839,
-      0.8795180722891566
+      0.0,
+      1.0
     ],
-    "tp": 141,
-    "fp": 47,
-    "fn": 8,
-    "tn": 475,
+    "tp": 2,
+    "fp": 2,
+    "fn": 0,
+    "tn": 2,
     "unparsed": 0,
     "by_subcategory": {
-      "abstract_question": {
+      "secret_credential": {
         "n": 3,
+        "n_pos": 2,
+        "n_neg": 1,
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1": 0.8,
+        "accuracy": 0.6666666666666666,
+        "specificity": 0.0,
+        "fp": 1,
+        "fn": 0
+      },
+      "security_news": {
+        "n": 1,
         "n_pos": 0,
-        "n_neg": 3,
+        "n_neg": 1,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "accuracy": 0.0,
+        "specificity": 0.0,
+        "fp": 1,
         "fn": 0
       },
-      "access_control": {
-        "n": 15,
-        "n_pos": 10,
-        "n_neg": 5,
-        "precision": 0.7692307692307693,
-        "recall": 1.0,
-        "f1": 0.8695652173913044,
-        "accuracy": 0.8,
-        "specificity": 0.4,
-        "fp": 3,
-        "fn": 0
-      },
-      "eula_boilerplate": {
+      "support_chatter": {
         "n": 1,
         "n_pos": 0,
         "n_neg": 1,
@@ -52,118 +52,10 @@
         "fp": 0,
         "fn": 0
       },
-      "helpdesk_ticket": {
-        "n": 53,
-        "n_pos": 0,
-        "n_neg": 53,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "infra_config": {
-        "n": 105,
-        "n_pos": 7,
-        "n_neg": 98,
-        "precision": 0.4666666666666667,
-        "recall": 1.0,
-        "f1": 0.6363636363636364,
-        "accuracy": 0.9238095238095239,
-        "specificity": 0.9183673469387755,
-        "fp": 8,
-        "fn": 0
-      },
-      "pii_handling": {
-        "n": 100,
-        "n_pos": 53,
-        "n_neg": 47,
-        "precision": 0.7833333333333333,
-        "recall": 0.8867924528301887,
-        "f1": 0.8318584070796461,
-        "accuracy": 0.81,
-        "specificity": 0.723404255319149,
-        "fp": 13,
-        "fn": 6
-      },
-      "public_snippet": {
-        "n": 105,
-        "n_pos": 0,
-        "n_neg": 105,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "secret_credential": {
-        "n": 55,
-        "n_pos": 46,
-        "n_neg": 9,
-        "precision": 0.9583333333333334,
-        "recall": 1.0,
-        "f1": 0.9787234042553191,
-        "accuracy": 0.9636363636363636,
-        "specificity": 0.7777777777777778,
-        "fp": 2,
-        "fn": 0
-      },
-      "security_advice": {
-        "n": 5,
-        "n_pos": 0,
-        "n_neg": 5,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "security_news": {
-        "n": 6,
-        "n_pos": 0,
-        "n_neg": 6,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 0.6666666666666666,
-        "specificity": 0.6666666666666666,
-        "fp": 2,
-        "fn": 0
-      },
-      "security_policy": {
-        "n": 13,
-        "n_pos": 12,
-        "n_neg": 1,
-        "precision": 1.0,
-        "recall": 0.8333333333333334,
-        "f1": 0.9090909090909091,
-        "accuracy": 0.8461538461538461,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 2
-      },
-      "support_chatter": {
-        "n": 174,
-        "n_pos": 0,
-        "n_neg": 174,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 0.8908045977011494,
-        "specificity": 0.8908045977011494,
-        "fp": 19,
-        "fn": 0
-      },
       "vendor_mention": {
-        "n": 10,
+        "n": 1,
         "n_pos": 0,
-        "n_neg": 10,
+        "n_neg": 1,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -171,8 +63,10 @@
         "specificity": 1.0,
         "fp": 0,
         "fn": 0
-      },
-      "vendor_security_claim": {
+      }
+    },
+    "by_difficulty": {
+      "easy": {
         "n": 2,
         "n_pos": 0,
         "n_neg": 2,
@@ -184,121 +78,71 @@
         "fp": 0,
         "fn": 0
       },
-      "vuln_incident": {
-        "n": 24,
-        "n_pos": 21,
-        "n_neg": 3,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      }
-    },
-    "by_difficulty": {
-      "easy": {
-        "n": 68,
-        "n_pos": 34,
-        "n_neg": 34,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
       "hard": {
-        "n": 104,
-        "n_pos": 56,
-        "n_neg": 48,
-        "precision": 0.8888888888888888,
+        "n": 4,
+        "n_pos": 2,
+        "n_neg": 2,
+        "precision": 0.5,
         "recall": 1.0,
-        "f1": 0.9411764705882353,
-        "accuracy": 0.9326923076923077,
-        "specificity": 0.8541666666666666,
-        "fp": 7,
+        "f1": 0.6666666666666666,
+        "accuracy": 0.5,
+        "specificity": 0.0,
+        "fp": 2,
         "fn": 0
-      },
-      "natural": {
-        "n": 499,
-        "n_pos": 59,
-        "n_neg": 440,
-        "precision": 0.5604395604395604,
-        "recall": 0.864406779661017,
-        "f1": 0.6799999999999999,
-        "accuracy": 0.9038076152304609,
-        "specificity": 0.9090909090909091,
-        "fp": 40,
-        "fn": 8
       }
     },
     "by_hardening": {
       "casual": {
-        "n": 22,
-        "n_pos": 10,
-        "n_neg": 12,
+        "n": 1,
+        "n_pos": 1,
+        "n_neg": 0,
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0,
         "accuracy": 1.0,
-        "specificity": 1.0,
+        "specificity": null,
         "fp": 0,
         "fn": 0
       },
       "core": {
-        "n": 68,
-        "n_pos": 34,
-        "n_neg": 34,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
+        "n": 2,
+        "n_pos": 0,
+        "n_neg": 2,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "accuracy": 1.0,
         "specificity": 1.0,
         "fp": 0,
         "fn": 0
       },
       "counterfactual": {
-        "n": 47,
-        "n_pos": 26,
-        "n_neg": 21,
-        "precision": 0.8387096774193549,
-        "recall": 1.0,
-        "f1": 0.9122807017543859,
-        "accuracy": 0.8936170212765957,
-        "specificity": 0.7619047619047619,
-        "fp": 5,
-        "fn": 0
-      },
-      "intent_only": {
-        "n": 10,
-        "n_pos": 10,
-        "n_neg": 0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": null,
-        "fp": 0,
-        "fn": 0
-      },
-      "near_boundary": {
-        "n": 15,
+        "n": 1,
         "n_pos": 0,
-        "n_neg": 15,
+        "n_neg": 1,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 0.8666666666666667,
-        "specificity": 0.8666666666666667,
-        "fp": 2,
+        "accuracy": 0.0,
+        "specificity": 0.0,
+        "fp": 1,
+        "fn": 0
+      },
+      "near_boundary": {
+        "n": 1,
+        "n_pos": 0,
+        "n_neg": 1,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.0,
+        "specificity": 0.0,
+        "fp": 1,
         "fn": 0
       },
       "obfuscation": {
-        "n": 10,
-        "n_pos": 10,
+        "n": 1,
+        "n_pos": 1,
         "n_neg": 0,
         "precision": 1.0,
         "recall": 1.0,
@@ -307,24 +151,12 @@
         "specificity": null,
         "fp": 0,
         "fn": 0
-      },
-      "real": {
-        "n": 499,
-        "n_pos": 59,
-        "n_neg": 440,
-        "precision": 0.5604395604395604,
-        "recall": 0.864406779661017,
-        "f1": 0.6799999999999999,
-        "accuracy": 0.9038076152304609,
-        "specificity": 0.9090909090909091,
-        "fp": 40,
-        "fn": 8
       }
     },
     "usage": {
-      "prompt_tokens": 306513,
-      "completion_tokens": 43260,
-      "est_cost_usd": 0.047955,
+      "prompt_tokens": 1588,
+      "completion_tokens": 16,
+      "est_cost_usd": 0.000165,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -332,6 +164,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it031-20260530_222317-41d0b3__model_cot.jsonl"
+    "preds_file": "results/preds_runs/it033-20260531_003935-ed7662__model.jsonl"
   }
 ]

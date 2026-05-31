@@ -29,8 +29,8 @@ import random
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "eval"))
-import regex_baseline  # reuse the deterministic secret detector
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))  # repo root
+from domains.it import SPEC as _IT_SPEC  # reuse the IT deterministic secret detector
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 OUT = ROOT / "data" / "real"
@@ -82,7 +82,7 @@ def truncate(text, n=2000):
 
 
 def regex_override(text):
-    label, matches = regex_baseline.predict(text)
+    label, matches = _IT_SPEC.regex_predict(text)
     return (label == 1), matches
 
 

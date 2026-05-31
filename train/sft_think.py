@@ -23,9 +23,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
-sys.path.insert(0, str(ROOT / "eval"))
+sys.path.insert(0, str(ROOT))
 import _env  # noqa: F401
-from prompts import build_messages, parse_label  # noqa: E402
+import domains  # noqa: E402
+
+SPEC = None  # set in main() from --domain
 
 import torch
 import tinker
@@ -39,14 +41,14 @@ CACHE = ROOT / "train" / "think_traces.jsonl"
 
 
 def prompt_ids_for(tok, text):
-    ids = tok.apply_chat_template(build_messages(text, cot=False),
+    ids = tok.apply_chat_template(SPEC.build_messages(text, cot=False),
                                   add_generation_prompt=True, enable_thinking=True, tokenize=True)
     return list(ids["input_ids"]) if hasattr(ids, "input_ids") else list(ids)
 
 
 def parse_after_think(decoded):
     ans = decoded.split("</think>")[-1] if "</think>" in decoded else decoded
-    return parse_label(ans)
+    return SPEC.parse_label(ans)
 
 
 def load_train_rows(n, seed):
@@ -133,7 +135,10 @@ def main():
     ap.add_argument("--lora-rank", type=int, default=32)
     ap.add_argument("--batch-size", type=int, default=64)
     ap.add_argument("--regen", action="store_true", help="force regenerate traces")
+    ap.add_argument("--domain", default="it")
     args = ap.parse_args()
+    global SPEC
+    SPEC = domains.get(args.domain)
 
     if args.regen or not CACHE.exists():
         traces = asyncio.run(generate(args.n, args.seed, args.temperature, args.gen_max_tokens, args.concurrency))

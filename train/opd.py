@@ -22,9 +22,11 @@ from typing import cast
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
-sys.path.insert(0, str(ROOT / "eval"))
+sys.path.insert(0, str(ROOT))
 import _env  # noqa: F401
-from prompts import build_messages, FEWSHOT_EXAMPLES  # noqa: E402
+import domains  # noqa: E402
+
+SPEC = None  # set in main() from --domain
 
 import chz
 import torch
@@ -91,7 +93,7 @@ async def _kl_penalty_fewshot_teacher(data_D, teacher_clients_D, dataset_indices
 def _build_teacher_prefix():
     tok = get_tokenizer(STUDENT)
     msgs = []
-    for t, lab in FEWSHOT_EXAMPLES:
+    for t, lab in SPEC.fewshot:
         msgs.append({"role": "user", "content": f'TEXT:\n"""\n{t}\n"""'})
         msgs.append({"role": "assistant", "content": "TRIGGER" if lab == 1 else "PASS"})
     try:
@@ -134,7 +136,7 @@ def load_prompts(n, only_real=False, exclude_hardening=()):
         rows = [r for r in rows if r.get("source") == "real"]
     if exclude_hardening:
         rows = [r for r in rows if r.get("hardening") not in exclude_hardening]
-    prompts = [build_messages(r["text"], cot=True)[1]["content"] for r in rows]
+    prompts = [SPEC.build_messages(r["text"], cot=True)[1]["content"] for r in rows]
     return prompts[:n]
 
 
@@ -157,7 +159,10 @@ def main():
     ap.add_argument("--exclude-hardening", default="",
                     help="comma-list of hardening families to skip (e.g. counterfactual,obfuscation)")
     ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--domain", default="it")
     args = ap.parse_args()
+    global SPEC
+    SPEC = domains.get(args.domain)
 
     if args.teacher_fewshot:
         global _TEACHER_PREFIX
