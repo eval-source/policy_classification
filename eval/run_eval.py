@@ -302,7 +302,7 @@ def make_run_meta(args, n_rows):
     iteration = len(prev) + 1
     now = datetime.datetime.now()
     config = dict(
-        model=args.model, mode=args.mode, cot=args.cot,
+        domain=args.domain, model=args.model, mode=args.mode, cot=args.cot,
         temperature=args.temperature, max_tokens=args.max_tokens,
         data=args.data, n=n_rows, concurrency=args.concurrency,
     )
