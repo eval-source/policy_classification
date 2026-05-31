@@ -1,19 +1,19 @@
 [
   {
-    "name": "MODEL tinker://cd7d8d44-44d8-501d-ae3d-49e4b163d215:train:0/sampler_weights/final +CoT",
+    "name": "MODEL tinker://8a98e9ef-1b93-5d49-a211-b2111305b32f:train:0/sampler_weights/final +CoT",
     "n": 671,
-    "precision": 0.7833333333333333,
+    "precision": 0.75,
     "recall": 0.9463087248322147,
-    "f1": 0.8571428571428571,
-    "accuracy": 0.9299552906110283,
+    "f1": 0.8367952522255192,
+    "accuracy": 0.9180327868852459,
     "f1_ci": [
-      0.8148148148148149,
-      0.897196261682243
+      0.7896440129449839,
+      0.8795180722891566
     ],
     "tp": 141,
-    "fp": 39,
+    "fp": 47,
     "fn": 8,
-    "tn": 483,
+    "tn": 475,
     "unparsed": 0,
     "by_subcategory": {
       "abstract_question": {
@@ -32,12 +32,12 @@
         "n": 15,
         "n_pos": 10,
         "n_neg": 5,
-        "precision": 0.7142857142857143,
+        "precision": 0.7692307692307693,
         "recall": 1.0,
-        "f1": 0.8333333333333333,
-        "accuracy": 0.7333333333333333,
-        "specificity": 0.2,
-        "fp": 4,
+        "f1": 0.8695652173913044,
+        "accuracy": 0.8,
+        "specificity": 0.4,
+        "fp": 3,
         "fn": 0
       },
       "eula_boilerplate": {
@@ -68,25 +68,25 @@
         "n": 105,
         "n_pos": 7,
         "n_neg": 98,
-        "precision": 0.5833333333333334,
+        "precision": 0.4666666666666667,
         "recall": 1.0,
-        "f1": 0.7368421052631579,
-        "accuracy": 0.9523809523809523,
-        "specificity": 0.9489795918367347,
-        "fp": 5,
+        "f1": 0.6363636363636364,
+        "accuracy": 0.9238095238095239,
+        "specificity": 0.9183673469387755,
+        "fp": 8,
         "fn": 0
       },
       "pii_handling": {
         "n": 100,
         "n_pos": 53,
         "n_neg": 47,
-        "precision": 0.7777777777777778,
-        "recall": 0.9245283018867925,
-        "f1": 0.8448275862068966,
-        "accuracy": 0.82,
-        "specificity": 0.7021276595744681,
-        "fp": 14,
-        "fn": 4
+        "precision": 0.7833333333333333,
+        "recall": 0.8867924528301887,
+        "f1": 0.8318584070796461,
+        "accuracy": 0.81,
+        "specificity": 0.723404255319149,
+        "fp": 13,
+        "fn": 6
       },
       "public_snippet": {
         "n": 105,
@@ -104,12 +104,12 @@
         "n": 55,
         "n_pos": 46,
         "n_neg": 9,
-        "precision": 0.9019607843137255,
+        "precision": 0.9583333333333334,
         "recall": 1.0,
-        "f1": 0.9484536082474228,
-        "accuracy": 0.9090909090909091,
-        "specificity": 0.4444444444444444,
-        "fp": 5,
+        "f1": 0.9787234042553191,
+        "accuracy": 0.9636363636363636,
+        "specificity": 0.7777777777777778,
+        "fp": 2,
         "fn": 0
       },
       "security_advice": {
@@ -155,9 +155,9 @@
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 0.9482758620689655,
-        "specificity": 0.9482758620689655,
-        "fp": 9,
+        "accuracy": 0.8908045977011494,
+        "specificity": 0.8908045977011494,
+        "fp": 19,
         "fn": 0
       },
       "vendor_mention": {
@@ -189,12 +189,12 @@
         "n_pos": 21,
         "n_neg": 3,
         "precision": 1.0,
-        "recall": 0.9047619047619048,
-        "f1": 0.9500000000000001,
-        "accuracy": 0.9166666666666666,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
         "specificity": 1.0,
         "fp": 0,
-        "fn": 2
+        "fn": 0
       }
     },
     "by_difficulty": {
@@ -214,24 +214,24 @@
         "n": 104,
         "n_pos": 56,
         "n_neg": 48,
-        "precision": 0.835820895522388,
+        "precision": 0.8888888888888888,
         "recall": 1.0,
-        "f1": 0.9105691056910569,
-        "accuracy": 0.8942307692307693,
-        "specificity": 0.7708333333333334,
-        "fp": 11,
+        "f1": 0.9411764705882353,
+        "accuracy": 0.9326923076923077,
+        "specificity": 0.8541666666666666,
+        "fp": 7,
         "fn": 0
       },
       "natural": {
         "n": 499,
         "n_pos": 59,
         "n_neg": 440,
-        "precision": 0.6455696202531646,
+        "precision": 0.5604395604395604,
         "recall": 0.864406779661017,
-        "f1": 0.7391304347826088,
-        "accuracy": 0.9278557114228457,
-        "specificity": 0.9363636363636364,
-        "fp": 28,
+        "f1": 0.6799999999999999,
+        "accuracy": 0.9038076152304609,
+        "specificity": 0.9090909090909091,
+        "fp": 40,
         "fn": 8
       }
     },
@@ -264,12 +264,12 @@
         "n": 47,
         "n_pos": 26,
         "n_neg": 21,
-        "precision": 0.7428571428571429,
+        "precision": 0.8387096774193549,
         "recall": 1.0,
-        "f1": 0.8524590163934427,
-        "accuracy": 0.8085106382978723,
-        "specificity": 0.5714285714285714,
-        "fp": 9,
+        "f1": 0.9122807017543859,
+        "accuracy": 0.8936170212765957,
+        "specificity": 0.7619047619047619,
+        "fp": 5,
         "fn": 0
       },
       "intent_only": {
@@ -312,19 +312,19 @@
         "n": 499,
         "n_pos": 59,
         "n_neg": 440,
-        "precision": 0.6455696202531646,
+        "precision": 0.5604395604395604,
         "recall": 0.864406779661017,
-        "f1": 0.7391304347826088,
-        "accuracy": 0.9278557114228457,
-        "specificity": 0.9363636363636364,
-        "fp": 28,
+        "f1": 0.6799999999999999,
+        "accuracy": 0.9038076152304609,
+        "specificity": 0.9090909090909091,
+        "fp": 40,
         "fn": 8
       }
     },
     "usage": {
       "prompt_tokens": 306513,
-      "completion_tokens": 45111,
-      "est_cost_usd": 0.048696,
+      "completion_tokens": 43260,
+      "est_cost_usd": 0.047955,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -332,6 +332,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it030-20260530_215221-a5aebf__model_cot.jsonl"
+    "preds_file": "results/preds_runs/it031-20260530_222317-41d0b3__model_cot.jsonl"
   }
 ]

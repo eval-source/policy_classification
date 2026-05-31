@@ -120,13 +120,20 @@ class PolicyPromptBuilder(PromptOnlyDatasetBuilder):
         return ds, None
 
 
-def load_prompts(n):
+def load_prompts(n, only_real=False, exclude_hardening=()):
+    """Prompt set for OPD rollouts. Selective distillation = prompt selection:
+    --only-real distills just the real (PII-heavy) distribution where the teacher is strong
+    and the student over-triggers, leaving synthetic counterfactuals UNSAMPLED (so the SFT
+    student's counterfactual ability is preserved — no KL pull there)."""
     rows = []
     for sub in ("it", "real"):
         fp = ROOT / "data" / sub / "train.jsonl"
         if fp.exists():
             rows += [json.loads(l) for l in fp.open() if l.strip()]
-    # user-content of the CoT prompt (system is supplied via convo_prefix)
+    if only_real:
+        rows = [r for r in rows if r.get("source") == "real"]
+    if exclude_hardening:
+        rows = [r for r in rows if r.get("hardening") not in exclude_hardening]
     prompts = [build_messages(r["text"], cot=True)[1]["content"] for r in rows]
     return prompts[:n]
 
@@ -145,6 +152,10 @@ def main():
     ap.add_argument("--steps", type=int, default=8)
     ap.add_argument("--teacher-fewshot", action="store_true",
                     help="teacher scores rollouts with a few-shot prefix (student stays zero-shot)")
+    ap.add_argument("--only-real", action="store_true",
+                    help="selective distillation: rollouts on REAL prompts only (preserve counterfactual)")
+    ap.add_argument("--exclude-hardening", default="",
+                    help="comma-list of hardening families to skip (e.g. counterfactual,obfuscation)")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
 
@@ -157,7 +168,9 @@ def main():
     renderer_name = model_info.get_recommended_renderer_name(STUDENT)
     gpb = 8 if args.smoke else args.groups_per_batch
     n_prompts = gpb * (2 if args.smoke else args.steps)
-    prompts = load_prompts(n_prompts)
+    excl = tuple(x.strip() for x in args.exclude_hardening.split(",") if x.strip())
+    prompts = load_prompts(n_prompts, only_real=args.only_real, exclude_hardening=excl)
+    print(f"prompt pool: {len(prompts)} (only_real={args.only_real}, exclude={excl})")
     log_path = ROOT / "train" / "runs" / (args.name + ("_smoke" if args.smoke else ""))
     if log_path.exists():
         shutil.rmtree(log_path)
