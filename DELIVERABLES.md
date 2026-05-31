@@ -118,9 +118,21 @@ it holds on the positive-rare view (Legal 98.6, Marketing 97.3). This generalize
 eval earns its keep) into a sharper claim: *clean-synthetic-only SFT is a ceiling on the easy case, not
 a deployment estimate, and may regress the real operating point.*
 
-**Caveat (honest):** these real tests are held-out **by row** but **same-source** (LEDGAR/ToS/news;
-product/review/news) — they prove generalization to unseen *examples* of seen distributions, not to
-unseen *sources*. Cross-source generalization is the next rigor step (§6).
+**Cross-source generalization (no retraining)** — tested whether the synth+real SFT learned the
+*policy* or memorized the training source, by evaluating on **unseen sources**:
+
+| domain | unseen pos / hard-neg / easy-neg | same-source F1 | **cross-source F1** | what generalized |
+|---|---|---|---|---|
+| Legal | CUAD contracts / held-out ToS / Wikipedia | 100 | **98.6** (−1.4) | both: CUAD recall 97, held-out ToS spec 85→**100** |
+| Marketing | bprateek copy / movie reviews / Wikipedia | 98.7 | **87.1** (−11.6) | positives only: recall 28→**99**; neg spec **drops** (reviews 73, wiki 84) |
+
+**Cross-source generalization is domain-dependent.** Legal's *binding-instrument-vs-boilerplate* boundary
+is sharp → it generalizes to an entirely different contract corpus and suppresses over-triggering on
+held-out boilerplate (caveat essentially removed). Marketing's *outbound-claim-vs-any-descriptive-prose*
+boundary is fuzzy → the model generalizes on positives but **over-triggers on unseen negatives** (movie
+reviews, even Wikipedia), so same-source F1 (98.7) overstates real cross-source performance (87.1). The
+honest takeaway: **same-source metrics can be optimistic for fuzzy-boundary policies** — broaden the
+negative training distribution or deploy high-recall + a precision gate (§6).
 
 ## 6. What I'd do next
 
@@ -128,9 +140,10 @@ unseen *sources*. Cross-source generalization is the next rigor step (§6).
   dominant model.
 - **Human-labeled PII gold set + explicit sensitivity threshold** with stakeholders — the residual PII
   noise is irreducible from metadata; or run a high-recall model + human precision gate in production.
-- **Cross-source generalization** (the §5 caveat): for Legal/Marketing, train on real source A and eval
-  on a *different* real source for the same label (e.g. CUAD vs LEDGAR; a second product-copy corpus) to
-  separate "memorized this source" from "learned the policy."
+- **Cross-source generalization** — **done** (§5): Legal generalizes (98.6), Marketing partially (87.1,
+  over-triggers on unseen negatives). **Next:** broaden Marketing's negative training distribution
+  (diverse non-marketing prose across genres) and re-run the cross-source probe to confirm the precision
+  recovers; consider a precision gate for the fuzzy-boundary domain.
 - **Held-out-*policy* generalization** (Part 2's open axis): train on IT, eval on an unseen IT-adjacent
   policy to separate "learned the format" from "learned the semantics."
 - **Extend to Legal + Marketing** domains — **done** (§5); both reuse the IT recipe via `domains/` + the

@@ -1,55 +1,55 @@
 [
   {
-    "name": "MODEL tinker://f9deaf54-09a5-5de1-9918-5c3a53a0b908:train:0/sampler_weights/final",
+    "name": "MODEL tinker://ac0fcea6-0855-5968-8ee2-b17fef9a6eb2:train:0/sampler_weights/final",
     "n": 350,
-    "precision": 1.0,
-    "recall": 0.9733333333333334,
-    "f1": 0.9864864864864865,
-    "accuracy": 0.9885714285714285,
+    "precision": 0.7760416666666666,
+    "recall": 0.9933333333333333,
+    "f1": 0.8713450292397661,
+    "accuracy": 0.8742857142857143,
     "f1_ci": [
-      0.9720279720279721,
-      0.9968847352024921
+      0.832807570977918,
+      0.9076517150395779
     ],
-    "tp": 146,
-    "fp": 0,
-    "fn": 4,
-    "tn": 200,
+    "tp": 149,
+    "fp": 43,
+    "fn": 1,
+    "tn": 157,
     "unparsed": 0,
     "by_subcategory": {
-      "contract": {
+      "brand_campaign_copy": {
         "n": 150,
         "n_pos": 150,
         "n_neg": 0,
         "precision": 1.0,
-        "recall": 0.9733333333333334,
-        "f1": 0.9864864864864865,
-        "accuracy": 0.9733333333333334,
+        "recall": 0.9933333333333333,
+        "f1": 0.9966555183946488,
+        "accuracy": 0.9933333333333333,
         "specificity": null,
         "fp": 0,
-        "fn": 4
+        "fn": 1
       },
-      "eula_tos_privacy": {
+      "market_fact": {
         "n": 100,
         "n_pos": 0,
         "n_neg": 100,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "accuracy": 0.84,
+        "specificity": 0.84,
+        "fp": 16,
         "fn": 0
       },
-      "general_prose": {
+      "opinion_review": {
         "n": 100,
         "n_pos": 0,
         "n_neg": 100,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "accuracy": 0.73,
+        "specificity": 0.73,
+        "fp": 27,
         "fn": 0
       }
     },
@@ -58,13 +58,13 @@
         "n": 350,
         "n_pos": 150,
         "n_neg": 200,
-        "precision": 1.0,
-        "recall": 0.9733333333333334,
-        "f1": 0.9864864864864865,
-        "accuracy": 0.9885714285714285,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 4
+        "precision": 0.7760416666666666,
+        "recall": 0.9933333333333333,
+        "f1": 0.8713450292397661,
+        "accuracy": 0.8742857142857143,
+        "specificity": 0.785,
+        "fp": 43,
+        "fn": 1
       }
     },
     "by_hardening": {
@@ -72,19 +72,19 @@
         "n": 350,
         "n_pos": 150,
         "n_neg": 200,
-        "precision": 1.0,
-        "recall": 0.9733333333333334,
-        "f1": 0.9864864864864865,
-        "accuracy": 0.9885714285714285,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 4
+        "precision": 0.7760416666666666,
+        "recall": 0.9933333333333333,
+        "f1": 0.8713450292397661,
+        "accuracy": 0.8742857142857143,
+        "specificity": 0.785,
+        "fp": 43,
+        "fn": 1
       }
     },
     "usage": {
-      "prompt_tokens": 97514,
-      "completion_tokens": 846,
-      "est_cost_usd": 0.01009,
+      "prompt_tokens": 89800,
+      "completion_tokens": 892,
+      "est_cost_usd": 0.009337,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -92,6 +92,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it047-20260531_110244-7e4fec__model.jsonl"
+    "preds_file": "results/preds_runs/it049-20260531_110907-51fcfc__model.jsonl"
   }
 ]
