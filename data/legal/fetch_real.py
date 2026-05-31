@@ -137,7 +137,74 @@ def from_news(limit, rng):
     raise RuntimeError(f"news source unavailable (last: {last})")
 
 
-SOURCES = {"ledgar": from_ledgar, "unfair_tos": from_unfair_tos, "news": from_news}
+# ---- v2 HARD negatives: confusable legalese the policy clearly/defensibly EXCLUDES. These exist
+# to push the frozen baseline down into the discriminative band (over-triggering is the failure). ----
+
+def from_privacy(limit, rng):
+    # privacy-policy prose (legalbench). Public boilerplate -> NEGATIVE (policy excludes privacy/ToS).
+    from datasets import load_dataset
+    ds = load_dataset("nguha/legalbench", "privacy_policy_qa", split="train", streaming=True)
+    out, seen = [], set()
+    for row in ds:
+        text = truncate(row.get("text"))
+        h = norm(text)
+        if not text or len(text) < 40 or h in seen:  # same passage repeats across questions
+            continue
+        seen.add(h)
+        out.append((text, 0, "eula_tos_privacy", "med", "metadata", "privacy", "legalbench/privacy_policy_qa"))
+        if len(out) >= limit:
+            break
+    return out
+
+
+def from_legal_advice(limit, rng):
+    # r/legaladvice posts: people describing legal situations in casual register, dense with legal
+    # terms but NOT a binding instrument -> NEGATIVE (commentary/discussion). Casual-register bonus.
+    from datasets import load_dataset
+    ds = load_dataset("jonathanli/legal-advice-reddit", split="train", streaming=True)
+    out = []
+    for row in ds:
+        text = truncate(((row.get("title") or "") + " " + (row.get("body") or "")).strip())
+        if not text or len(text) < 80 or text.lower() in ("[removed]", "[deleted]"):
+            continue
+        out.append((text, 0, "legal_news", "med", "metadata", "advice", "jonathanli/legal-advice-reddit"))
+        if len(out) >= limit:
+            break
+    return out
+
+
+_OBLIG = re.compile(r"\b(shall|must|may not|is liable|indemnif|liabilit|warrant|obligat)\b", re.I)
+
+
+def from_legislation(limit, rng):
+    # US congressional bills (billsum) — but extract a single OBLIGATION SENTENCE ("X shall ...")
+    # rather than the bill header. At the sentence level a statutory obligation is genuinely
+    # confusable with a contract clause (the model should over-trigger), which is the point: it is
+    # public LEGISLATION, not a NEGOTIATED party-specific instrument -> NEGATIVE. Deliberate RUBRIC
+    # CALL: low confidence => excluded from SFT training, kept in the eval as a hard over-trigger
+    # probe. Flagged, not hidden.
+    from datasets import load_dataset
+    ds = load_dataset("FiscalNote/billsum", split="train", streaming=True)
+    out = []
+    for row in ds:
+        body = re.sub(r"\s+", " ", (row.get("text") or "")).strip()
+        # split into rough sentences; keep a clause-length obligation sentence
+        sent = next((s.strip() for s in re.split(r"(?<=[.;])\s+", body)
+                     if 60 <= len(s.strip()) <= 320 and _OBLIG.search(s)
+                     and not s.strip().upper().startswith("SECTION")), None)
+        if not sent:
+            continue
+        out.append((sent, 0, "legislation", "low", "metadata", "statute", "FiscalNote/billsum"))
+        if len(out) >= limit:
+            break
+    return out
+
+
+SOURCES = {"ledgar": from_ledgar, "unfair_tos": from_unfair_tos, "news": from_news,
+           "privacy": from_privacy, "legal_advice": from_legal_advice, "legislation": from_legislation}
+# per-source caps so the HARD negatives dominate the negative pool (-> harder frozen baseline).
+CAPS = {"ledgar": 500, "unfair_tos": 450, "news": 120,
+        "privacy": 300, "legal_advice": 300, "legislation": 300}
 
 
 def load_synthetic_hashes():
@@ -166,7 +233,7 @@ def main():
     print("Fetching legal sources (failures are skipped):")
     for name, fn in SOURCES.items():
         try:
-            produced = fn(args.limit, rng)
+            produced = fn(min(args.limit, CAPS.get(name, args.limit)), rng)
         except Exception as e:  # noqa: BLE001
             print(f"  {name:10} SKIPPED: {type(e).__name__}: {str(e)[:120]}")
             continue
