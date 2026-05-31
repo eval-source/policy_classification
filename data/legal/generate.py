@@ -148,91 +148,69 @@ NEG = [neg_eula, neg_news, neg_casual, neg_logistics]
 
 # --------------------------- counterfactual pairs ---------------------------
 
-def cf_boilerplate_vs_clause(rng, fmt):
-    pos = wrap(rng, fmt, "Confidentiality. Each party shall hold the other's Confidential Information "
-              "in strict confidence and not disclose it to third parties for five (5) years.", subject="NDA")
-    neg = wrap(rng, fmt, "By using our site you agree to keep your account password confidential. See "
-              "the Terms of Service for details.", subject="terms")
-    return pos, neg, "nda_confidentiality"
+# MINIMAL-EDIT counterfactuals: pos and neg share an IDENTICAL clause body; only the terse FRAME
+# differs, and that frame is the SOLE signal of negotiated/binding instrument (POSITIVE) vs a
+# policy-EXCLUDED context — public boilerplate (ToS/privacy), commentary, sample/template, textbook
+# example, or an unexecuted draft (NEGATIVE). The earlier CFs were too easy (frozen cf-spec 100)
+# because the pos/neg sentences were entirely different and the cues were loud ("EXECUTED", "blank
+# template — fill in [PARTY NAME]", "Law360 explains"). Sharing the binding-looking clause body and
+# leaving only a subtle frame is what makes these discriminative for a strong base model.
+
+_CLAUSES = [
+    ("the Receiving Party shall hold all Confidential Information in strict confidence and not "
+     "disclose it to any third party for five (5) years", "nda_confidentiality"),
+    ("the Supplier shall indemnify and hold the Client harmless against all third-party claims "
+     "arising from the Services", "indemnity_liability"),
+    ("the Processor shall notify the Controller within 24 hours of any personal-data breach",
+     "compliance_obligation"),
+    ("the Vendor shall maintain $5M in cyber-insurance and deliver a SOC 2 Type II report annually",
+     "contract"),
+    ("neither party shall solicit the other's employees for twelve (12) months after termination",
+     "contract"),
+    ("the Licensee shall not reverse-engineer, decompile, or disassemble the Software", "contract"),
+    ("each party's aggregate liability shall not exceed the fees paid in the prior twelve (12) months",
+     "indemnity_liability"),
+]
 
 
-def cf_template_vs_executed(rng, fmt):
+def _cap(s):
+    return s[0].upper() + s[1:]
+
+
+# POSITIVE frames — negotiated / executed / party-specific instrument
+_BIND_FRAMES = [
+    lambda c, p, k, n: f"Section {n}. {_cap(c)}.",
+    lambda c, p, k, n: f"Per our executed {k} with {p}, {c}.",
+    lambda c, p, k, n: f"Under the {k} we signed with {p}, {c}.",
+    lambda c, p, k, n: f"{_cap(c)}. Countersigned by both parties yesterday.",
+    lambda c, p, k, n: f"As agreed in the fully-executed {k}, {c}.",
+]
+# NEGATIVE frames — same clause body, policy-EXCLUDED context (each a defensible non-trigger).
+# Deliberately SUBTLE/descriptive: most don't name a category outright, so the model must infer
+# "this is describing a norm / quoting a reference / not yet executed" rather than key on a keyword.
+_NONBIND_FRAMES = [
+    lambda c, p, k, n: f"Most {k}s say {c}.",                       # describing the norm (commentary)
+    lambda c, p, k, n: f"In a typical deal, {c}.",                  # commentary
+    lambda c, p, k, n: f"For reference, the standard language: {c}.",   # quoting a reference, not the deal
+    lambda c, p, k, n: f"Our public Terms of Service note that {c}.",   # boilerplate
+    lambda c, p, k, n: f"Textbook example — {c}.",                  # educational
+    lambda c, p, k, n: f"Draft for discussion, nothing agreed yet: {c}.",  # unexecuted
+    lambda c, p, k, n: f"A blank {k} template includes: {c}.",      # template/sample
+]
+
+
+def _cf_pair(rng, fmt):
+    c, sub = rng.choice(_CLAUSES)
     p = rng.choice(PARTIES)
-    pos = wrap(rng, fmt, f"EXECUTED: This Agreement between {p} and Vendor, signed March 3, sets the "
-              f"indemnification cap at $2M and net-30 terms.", subject="signed contract")
-    neg = wrap(rng, fmt, "Here's a blank NDA template — fill in [PARTY NAME], [DATE], and [TERM] with "
-              "your own values before sending.", subject="template")
-    return pos, neg, "contract"
+    k = rng.choice(["MSA", "NDA", "SOW", "DPA", "Agreement"])
+    n = rng.randint(2, 14)
+    pos = wrap(rng, fmt, rng.choice(_BIND_FRAMES)(c, p, k, n), subject=k)
+    neg = wrap(rng, fmt, rng.choice(_NONBIND_FRAMES)(c, p, k, n), subject="for reference")
+    return pos, neg, sub
 
 
-def cf_clause_vs_news(rng, fmt):
-    p = rng.choice(PARTIES)
-    pos = wrap(rng, fmt, f"Indemnification: {p} shall defend and hold us harmless against third-party "
-              f"IP claims arising from the Software.", subject="indemnity")
-    neg = wrap(rng, fmt, f"Did you see? {p} lost an indemnification dispute in court last week — big "
-              f"news for the industry.", subject="news")
-    return pos, neg, "indemnity_liability"
-
-
-def cf_obligation_vs_casual(rng, fmt):
-    pos = wrap(rng, fmt, "We are contractually bound under the DPA to notify the controller within 24h "
-              "of a breach — that's an enforceable obligation.", subject="obligation")
-    neg = wrap(rng, fmt, "legally speaking we should probably notify them quickly if something happens, "
-              "but idk what the contract says exactly", subject="re: legal")
-    return pos, neg, "compliance_obligation"
-
-
-def cf_privileged_vs_commentary(rng, fmt):
-    p = rng.choice(PARTIES)
-    pos = wrap(rng, fmt, f"ATTORNEY-CLIENT PRIVILEGED: counsel's assessment of our litigation exposure "
-              f"in the {p} matter — do not forward.", subject="PRIVILEGED")
-    neg = wrap(rng, fmt, f"Interesting blog on how companies handle litigation exposure — general "
-              f"commentary, nothing specific to us.", subject="blog")
-    return pos, neg, "privilege_litigation"
-
-
-def cf_aspirational_vs_binding(rng, fmt):
-    # aspirational marketing promise (reads warranty-ish) vs a binding warranty/indemnity clause
-    pos = wrap(rng, fmt, "Section 9. The Supplier shall indemnify and hold the Client harmless "
-              "against all third-party claims arising from the Services.", subject="indemnity")
-    neg = wrap(rng, fmt, "Our mission: we aim to stand behind every product and always do right by "
-              "our customers — that's our promise to you.", subject="brand promise")
-    return pos, neg, "indemnity_liability"
-
-
-def cf_quoted_clause_in_news(rng, fmt):
-    p = rng.choice(PARTIES)
-    pos = wrap(rng, fmt, f"Per our executed MSA with {p}: \"Vendor shall maintain $5M cyber-insurance "
-              f"and deliver a SOC 2 Type II report annually.\" Binding on us.", subject="MSA")
-    neg = wrap(rng, fmt, "Law360 explains a typical SaaS term — \"the vendor shall maintain insurance "
-              "and provide audit reports\" — to illustrate market norms. General commentary.", subject="news")
-    return pos, neg, "contract"
-
-
-def cf_privacy_policy_vs_dpa(rng, fmt):
-    pos = wrap(rng, fmt, "Data Processing Agreement, Sec. 3: Processor shall process Personal Data only "
-              "on the Controller's documented instructions and notify the Controller within 24 hours of "
-              "a personal-data breach.", subject="DPA")
-    neg = wrap(rng, fmt, "Privacy Policy: we process your data to provide the service and may share it "
-              "with our processors. You have the right to access or delete your data — see the policy.",
-              subject="privacy policy")
-    return pos, neg, "contract"
-
-
-def cf_textbook_vs_executed(rng, fmt):
-    p = rng.choice(PARTIES)
-    pos = wrap(rng, fmt, f"EXECUTED and dated NDA between {p} and us — confidentiality survives five (5) "
-              f"years post-termination. Countersigned yesterday.", subject="signed NDA")
-    neg = wrap(rng, fmt, "Example clause from a contracts textbook, for teaching: \"The Receiving Party "
-              "shall hold Confidential Information in confidence.\" (illustrative, not a real agreement)",
-              subject="study notes")
-    return pos, neg, "nda_confidentiality"
-
-
-CF = [cf_boilerplate_vs_clause, cf_template_vs_executed, cf_clause_vs_news,
-      cf_obligation_vs_casual, cf_privileged_vs_commentary,
-      cf_aspirational_vs_binding, cf_quoted_clause_in_news, cf_privacy_policy_vs_dpa,
-      cf_textbook_vs_executed]
+# single parameterized family; variety comes from the random clause body + frame per draw
+CF = [_cf_pair]
 
 # --------------------------- near-boundary negatives ---------------------------
 
