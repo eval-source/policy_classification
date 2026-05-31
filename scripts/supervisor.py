@@ -84,12 +84,18 @@ def assess(domain, hist):
                            f"--model Qwen/Qwen3.5-4B --domain {domain} --dataset-version {domain}-v1 "
                            f"--note 'frozen baseline'"}
     if fz["f1"] > DISC_HI:
-        st["verdict"] = "SATURATED"
-        return st, {"stage": "discriminative", "why": f"frozen F1 {fz['f1']:.2f} > {DISC_HI} (saturated)",
-                    "action": "HARDEN: add subtler counterfactuals/near-boundary to the generator, regenerate, re-eval frozen",
-                    "cmd": f"(worker) edit data/{domain}/generate.py CF/near_boundary, then "
-                           f"python data/{domain}/generate.py --variant v1 --seed 0 --out data/{domain} "
-                           f"&& re-run frozen eval"}
+        # retry cap: if hardening was already tried (>=2 frozen evals) and F1 is still high, the
+        # base model is genuinely strong on this domain — don't manufacture artificial difficulty.
+        if len(frozen) >= 2:
+            st["verdict"] = f"BASE-STRONG (frozen F1 {fz['f1']:.2f} after {len(frozen)} attempts; low SFT headroom)"
+            # fall through to the real-data stage
+        else:
+            st["verdict"] = "SATURATED"
+            return st, {"stage": "discriminative", "why": f"frozen F1 {fz['f1']:.2f} > {DISC_HI} (saturated)",
+                        "action": "HARDEN: add subtler counterfactuals/near-boundary, regenerate, re-eval frozen",
+                        "cmd": f"(worker) edit data/{domain}/generate.py CF/near_boundary, then "
+                               f"python data/{domain}/generate.py --variant v1 --seed 0 --out data/{domain} "
+                               f"&& re-run frozen eval"}
     # stage 3: real data (real rows present in an eval — they carry hardening="real", or the
     # eval combined a data/real file)
     has_real = any(("real" in (model_sys(it) or {}).get("by_hardening", {}))

@@ -1,97 +1,61 @@
 [
   {
-    "name": "MODEL tinker://1eaaa70b-f886-5e16-b20f-99c1ac3ab2be:train:0/sampler_weights/final",
-    "n": 90,
-    "precision": 1.0,
+    "name": "MODEL tinker://f9deaf54-09a5-5de1-9918-5c3a53a0b908:train:0/sampler_weights/final",
+    "n": 178,
+    "precision": 0.9722222222222222,
     "recall": 1.0,
-    "f1": 1.0,
-    "accuracy": 1.0,
+    "f1": 0.9859154929577464,
+    "accuracy": 0.9943820224719101,
     "f1_ci": [
-      1.0,
+      0.9508196721311475,
       1.0
     ],
-    "tp": 52,
-    "fp": 0,
+    "tp": 35,
+    "fp": 1,
     "fn": 0,
-    "tn": 38,
+    "tn": 142,
     "unparsed": 0,
     "by_subcategory": {
-      "casual_legal_reference": {
-        "n": 3,
-        "n_pos": 0,
-        "n_neg": 3,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "compliance_obligation": {
-        "n": 11,
-        "n_pos": 10,
-        "n_neg": 1,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
       "contract": {
-        "n": 11,
-        "n_pos": 8,
-        "n_neg": 3,
+        "n": 31,
+        "n_pos": 31,
+        "n_neg": 0,
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0,
         "accuracy": 1.0,
-        "specificity": 1.0,
+        "specificity": null,
         "fp": 0,
         "fn": 0
       },
       "eula_tos_privacy": {
-        "n": 8,
+        "n": 60,
         "n_pos": 0,
-        "n_neg": 8,
+        "n_neg": 60,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "accuracy": 0.9833333333333333,
+        "specificity": 0.9833333333333333,
+        "fp": 1,
         "fn": 0
       },
       "indemnity_liability": {
-        "n": 18,
-        "n_pos": 12,
-        "n_neg": 6,
+        "n": 1,
+        "n_pos": 1,
+        "n_neg": 0,
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0,
         "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "legal_dept_logistics": {
-        "n": 5,
-        "n_pos": 0,
-        "n_neg": 5,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
+        "specificity": null,
         "fp": 0,
         "fn": 0
       },
       "legal_news": {
-        "n": 8,
+        "n": 83,
         "n_pos": 0,
-        "n_neg": 8,
+        "n_neg": 83,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -101,58 +65,6 @@
         "fn": 0
       },
       "nda_confidentiality": {
-        "n": 10,
-        "n_pos": 9,
-        "n_neg": 1,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "privilege_litigation": {
-        "n": 16,
-        "n_pos": 13,
-        "n_neg": 3,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      }
-    },
-    "by_difficulty": {
-      "easy": {
-        "n": 41,
-        "n_pos": 23,
-        "n_neg": 18,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "hard": {
-        "n": 49,
-        "n_pos": 29,
-        "n_neg": 20,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      }
-    },
-    "by_hardening": {
-      "casual": {
         "n": 2,
         "n_pos": 2,
         "n_neg": 0,
@@ -164,33 +76,9 @@
         "fp": 0,
         "fn": 0
       },
-      "core": {
-        "n": 41,
-        "n_pos": 23,
-        "n_neg": 18,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "counterfactual": {
-        "n": 31,
-        "n_pos": 17,
-        "n_neg": 14,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
-        "fn": 0
-      },
-      "intent_only": {
-        "n": 10,
-        "n_pos": 10,
+      "privilege_litigation": {
+        "n": 1,
+        "n_pos": 1,
         "n_neg": 0,
         "precision": 1.0,
         "recall": 1.0,
@@ -199,24 +87,40 @@
         "specificity": null,
         "fp": 0,
         "fn": 0
-      },
-      "near_boundary": {
-        "n": 6,
-        "n_pos": 0,
-        "n_neg": 6,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+      }
+    },
+    "by_difficulty": {
+      "natural": {
+        "n": 178,
+        "n_pos": 35,
+        "n_neg": 143,
+        "precision": 0.9722222222222222,
+        "recall": 1.0,
+        "f1": 0.9859154929577464,
+        "accuracy": 0.9943820224719101,
+        "specificity": 0.993006993006993,
+        "fp": 1,
+        "fn": 0
+      }
+    },
+    "by_hardening": {
+      "real": {
+        "n": 178,
+        "n_pos": 35,
+        "n_neg": 143,
+        "precision": 0.9722222222222222,
+        "recall": 1.0,
+        "f1": 0.9859154929577464,
+        "accuracy": 0.9943820224719101,
+        "specificity": 0.993006993006993,
+        "fp": 1,
         "fn": 0
       }
     },
     "usage": {
-      "prompt_tokens": 22647,
-      "completion_tokens": 232,
-      "est_cost_usd": 0.002358,
+      "prompt_tokens": 51041,
+      "completion_tokens": 392,
+      "est_cost_usd": 0.005261,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -224,6 +128,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it037-20260531_012430-5ec8ac__model.jsonl"
+    "preds_file": "results/preds_runs/it041-20260531_015044-b69dfd__model.jsonl"
   }
 ]

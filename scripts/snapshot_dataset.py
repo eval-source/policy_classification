@@ -23,7 +23,9 @@ DSPATH = ROOT / "results" / "datasets.jsonl"
 def load_rows(domain="it", include_real=True):
     dirs = [ROOT / "data" / domain]
     if include_real:
-        dirs.append(ROOT / "data" / "real")
+        # IT's real corpus lives in data/real; every other domain keeps its own data/<domain>/real
+        # (mixing data/real into non-IT domains would contaminate with IT's PII/secret rows).
+        dirs.append(ROOT / "data" / "real" if domain == "it" else ROOT / "data" / domain / "real")
     splits, rows = {}, []
     for d in dirs:
         for sp in ("train", "val", "test"):
