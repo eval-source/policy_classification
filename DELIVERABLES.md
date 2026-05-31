@@ -17,6 +17,9 @@ tab (f001–f032). All numbers are reproducible (seeded generator + fetcher; eva
   weight** — a few-shot 27B teacher fixed SFT's PII over-triggering on the real-heavy distribution.
 - **Label quality silently moves the headline metric**; a regex+judge+human audit (κ=0.906) found and
   fixed the systematic label errors.
+- **Across all three domains, clean-synthetic F1 does not predict real-world transfer** — and
+  synthetic-only SFT can *regress* it. The reliable lever is training on data that matches the
+  deployment distribution (incl. the real hard-negative/positive classes). See §5.
 
 ## 1. Datasets (`data/it/generate.py`, `data/it/fetch_real.py`)
 
@@ -93,15 +96,45 @@ remaining PII over-triggering. **No single model dominates all slices** — it's
   to the teacher's profile (f022). **Selective (real-only) distillation only partially isolates a slice**
   (f032) — LoRA updates shared weights; a mixed KL+SFT-anchor objective is the real fix.
 
-## 5. What I'd do next
+## 5. Multi-domain real-world transfer (Legal + Marketing)
+
+The IT recipe is domain-parameterized (`domains/` registry + a reusable `policy-domain` skill), so
+Legal and Marketing reuse the same generator/eval/SFT code. On **synthetic** data the base model was
+already strong (Legal F1 100, Marketing 96) — low SFT headroom, opposite of IT. The interesting test
+was **real HF data**, built the same way (a real fetcher per domain, leakage-safe by-row splits, a
+realistic positive-rare view):
+
+| domain | real source: **pos** / hard-neg / easy-neg | frozen on REAL | synthetic-only SFT | **synth+real SFT** |
+|---|---|---|---|---|
+| Legal | LEDGAR clauses / **unfair-ToS** / AG-news | F1 93.4 (ToS spec 77) | **87.6** — *regresses* (ToS spec 37) | **100** (ToS spec 100) |
+| Marketing | Amazon product copy / **reviews** / AG-news | F1 37.1 (recall 24) | 51.4 (recall 36) | **98.7** (recall 100) |
+
+**The headline cross-domain finding:** synthetic metrics are not predictive of transfer **in either
+direction**. Legal *over*-triggered on real Terms-of-Service (same legalese as binding clauses, opposite
+label) — and synthetic-only SFT made it *worse*. Marketing *under*-triggered on real product copy (it
+doesn't look like synthetic taglines/promos). **Opposite symptoms, identical cause** (synthetic train
+distribution ≠ real) and **identical fix**: put the real hard class in training → F1 → ~99 on both, and
+it holds on the positive-rare view (Legal 98.6, Marketing 97.3). This generalizes the IT lesson (real
+eval earns its keep) into a sharper claim: *clean-synthetic-only SFT is a ceiling on the easy case, not
+a deployment estimate, and may regress the real operating point.*
+
+**Caveat (honest):** these real tests are held-out **by row** but **same-source** (LEDGAR/ToS/news;
+product/review/news) — they prove generalization to unseen *examples* of seen distributions, not to
+unseen *sources*. Cross-source generalization is the next rigor step (§6).
+
+## 6. What I'd do next
 
 - **Mixed-objective OPD** (KL-to-teacher on real + SFT/self-anchor on counterfactual) for a single
   dominant model.
 - **Human-labeled PII gold set + explicit sensitivity threshold** with stakeholders — the residual PII
   noise is irreducible from metadata; or run a high-recall model + human precision gate in production.
+- **Cross-source generalization** (the §5 caveat): for Legal/Marketing, train on real source A and eval
+  on a *different* real source for the same label (e.g. CUAD vs LEDGAR; a second product-copy corpus) to
+  separate "memorized this source" from "learned the policy."
 - **Held-out-*policy* generalization** (Part 2's open axis): train on IT, eval on an unseen IT-adjacent
   policy to separate "learned the format" from "learned the semantics."
-- **Extend to Legal + Marketing** domains (the generator/eval/audit are domain-agnostic).
+- **Extend to Legal + Marketing** domains — **done** (§5); both reuse the IT recipe via `domains/` + the
+  `policy-domain` skill, and the autonomous supervisor (`scripts/supervisor.py`) drove them to completion.
 - **Calibration + per-domain operating points** (IT: precision-favoring to avoid alert fatigue).
 - **Confirm Tinker prices** (`config/tinker_prices.json` is a placeholder) for calibrated $ costs.
 
@@ -117,4 +150,12 @@ python train/opd.py --name opd --teacher-fewshot --teacher Qwen/Qwen3.6-27B \
     --student-ckpt tinker://<sft-state> --steps 32        # few-shot OPD
 python scripts/audit_labels.py --judge-preds <judge-run> # label audit
 python viz/serve.py                                      # dashboard at /viz/index.html
+
+# other domains (same recipe; --domain selects the spec in domains/)
+python data/legal/fetch_real.py --limit 500 --seed 0     # LEDGAR / unfair-ToS / AG-news
+python data/marketing/fetch_real.py --limit 500 --seed 0 # Amazon product-copy / reviews / AG-news
+python train/build_sft_data.py --domain legal && python train/sft.py --name legal_sft_real
+python eval/run_eval.py --data data/legal/real/test_balanced.jsonl --mode model \
+    --model tinker://<ckpt> --domain legal --dataset-version legal-real-v1
+python scripts/supervisor.py --status                    # per-domain stage + next action
 ```
