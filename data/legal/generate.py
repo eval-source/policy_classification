@@ -191,8 +191,48 @@ def cf_privileged_vs_commentary(rng, fmt):
     return pos, neg, "privilege_litigation"
 
 
+def cf_aspirational_vs_binding(rng, fmt):
+    # aspirational marketing promise (reads warranty-ish) vs a binding warranty/indemnity clause
+    pos = wrap(rng, fmt, "Section 9. The Supplier shall indemnify and hold the Client harmless "
+              "against all third-party claims arising from the Services.", subject="indemnity")
+    neg = wrap(rng, fmt, "Our mission: we aim to stand behind every product and always do right by "
+              "our customers — that's our promise to you.", subject="brand promise")
+    return pos, neg, "indemnity_liability"
+
+
+def cf_quoted_clause_in_news(rng, fmt):
+    p = rng.choice(PARTIES)
+    pos = wrap(rng, fmt, f"Per our executed MSA with {p}: \"Vendor shall maintain $5M cyber-insurance "
+              f"and deliver a SOC 2 Type II report annually.\" Binding on us.", subject="MSA")
+    neg = wrap(rng, fmt, "Law360 explains a typical SaaS term — \"the vendor shall maintain insurance "
+              "and provide audit reports\" — to illustrate market norms. General commentary.", subject="news")
+    return pos, neg, "contract"
+
+
+def cf_privacy_policy_vs_dpa(rng, fmt):
+    pos = wrap(rng, fmt, "Data Processing Agreement, Sec. 3: Processor shall process Personal Data only "
+              "on the Controller's documented instructions and notify the Controller within 24 hours of "
+              "a personal-data breach.", subject="DPA")
+    neg = wrap(rng, fmt, "Privacy Policy: we process your data to provide the service and may share it "
+              "with our processors. You have the right to access or delete your data — see the policy.",
+              subject="privacy policy")
+    return pos, neg, "contract"
+
+
+def cf_textbook_vs_executed(rng, fmt):
+    p = rng.choice(PARTIES)
+    pos = wrap(rng, fmt, f"EXECUTED and dated NDA between {p} and us — confidentiality survives five (5) "
+              f"years post-termination. Countersigned yesterday.", subject="signed NDA")
+    neg = wrap(rng, fmt, "Example clause from a contracts textbook, for teaching: \"The Receiving Party "
+              "shall hold Confidential Information in confidence.\" (illustrative, not a real agreement)",
+              subject="study notes")
+    return pos, neg, "nda_confidentiality"
+
+
 CF = [cf_boilerplate_vs_clause, cf_template_vs_executed, cf_clause_vs_news,
-      cf_obligation_vs_casual, cf_privileged_vs_commentary]
+      cf_obligation_vs_casual, cf_privileged_vs_commentary,
+      cf_aspirational_vs_binding, cf_quoted_clause_in_news, cf_privacy_policy_vs_dpa,
+      cf_textbook_vs_executed]
 
 # --------------------------- near-boundary negatives ---------------------------
 
@@ -205,6 +245,11 @@ def near_boundary(rng, fmt):
         ("What's the difference between an MSA and an SOW? Studying for a contracts class.", "legal_news"),
         ("The legal team recommends everyone complete the annual compliance training by Friday.", "legal_dept_logistics"),
         ("Hot take: most EULAs are unreadable and nobody actually agrees to them meaningfully.", "casual_legal_reference"),
+        ("Blog tutorial: here's a sample indemnification clause you might see in an SOW, with notes "
+         "on what each part means. Educational only.", "legal_news"),
+        ("We promise to always protect your privacy and treat your data with respect.", "eula_tos_privacy"),
+        ("Quote from the court opinion: \"the parties shall bear their own costs\" — interesting "
+         "precedent, sharing for awareness.", "legal_news"),
     ])
     return wrap(rng, fmt, t, subject="fyi"), sub
 
