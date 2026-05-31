@@ -29,7 +29,8 @@ def main():
     with socketserver.TCPServer(("127.0.0.1", args.port), handler) as httpd:
         base = f"http://127.0.0.1:{args.port}"
         print(f"Serving {ROOT} at {base}")
-        print(f"  dashboard : {base}/viz/index.html  (tabs: Results · Dataset · Versions)")
+        print(f"  dashboard : {base}/viz/index.html  (tabs: Results · Dataset · Versions · Findings)")
+        print("              domain sub-tabs (All · IT · Legal · Marketing) filter every tab")
         print("Ctrl-C to stop.")
         if not args.no_open:
             threading.Timer(0.5, lambda: webbrowser.open(f"{base}/viz/index.html")).start()

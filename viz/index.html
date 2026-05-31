@@ -32,6 +32,10 @@
   .subtabs { display:flex; gap:6px; margin:4px 0 10px; }
   .subtab { padding:4px 12px; font-size:12px; border:1px solid #2b313c; border-radius:6px; background:var(--panel); color:var(--muted); cursor:pointer; }
   .subtab.active { color:var(--fg); border-color:var(--acc); }
+  .domtabs { display:flex; gap:6px; margin:10px 0 -1px; }
+  .domtab { padding:5px 16px; font-size:12px; font-weight:500; border:1px solid #2b313c; border-bottom:none; border-radius:7px 7px 0 0; background:var(--panel); color:var(--muted); cursor:pointer; }
+  .domtab:hover { color:var(--fg); }
+  .domtab.active { color:var(--acc); border-color:var(--acc); background:rgba(88,166,255,.10); }
   .excard { border:1px solid #232833; border-left:3px solid var(--muted); border-radius:6px; padding:8px 10px; margin:6px 0; }
   .excard.ok { border-left-color:var(--pos); } .excard.bad { border-left-color:var(--neg); }
   table.ablation { width:100%; border-collapse:collapse; font-size:12px; }
@@ -87,6 +91,12 @@
     <button class="tab" data-tab="datasets">Dataset Versions</button>
     <button class="tab" data-tab="findings">Findings</button>
   </div>
+  <div class="domtabs" id="domtabs">
+    <button class="domtab active" data-dom="all">All domains</button>
+    <button class="domtab" data-dom="it">IT</button>
+    <button class="domtab" data-dom="legal">Legal</button>
+    <button class="domtab" data-dom="marketing">Marketing</button>
+  </div>
 </header>
 
 <div class="main">
@@ -108,7 +118,6 @@
   <section class="tab-section" id="tab-dataset">
     <div class="dswrap">
       <div class="side">
-        <label class="f">Domain</label><select id="fdomain"></select>
         <label class="f">Search text</label><input id="q" placeholder="substring…">
         <label class="f">Source</label><select id="fsource"></select>
         <label class="f">Split</label><select id="fsplit"></select>
@@ -159,6 +168,27 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
   t.classList.add('active'); $('tab-'+t.dataset.tab).classList.add('active');
 });
 
+/* ---------- domain sub-tabs (filter every tab by domain) ---------- */
+let CURRENT_DOMAIN='all';
+const DOMAINS=['it','legal','marketing'];
+function domMatch(d){ return CURRENT_DOMAIN==='all' || d===CURRENT_DOMAIN; }
+// an iteration's domain: from config.domain, else inferred from the data path
+function rowDomain(r){ const c=r.cfg||{}; if(c.domain) return c.domain;
+  const d=c.data||''; if(d.includes('/legal/'))return 'legal'; if(d.includes('/marketing/'))return 'marketing'; return 'it'; }
+// a dataset/finding version's domain: legal-*/marketing-* by prefix, ds-*/it-* => it, else null (cross-cutting)
+function domVer(v){ v=v||''; if(/^legal/i.test(v))return 'legal'; if(/^(marketing|mkt)/i.test(v))return 'marketing';
+  if(/^(ds-|it)/i.test(v))return 'it'; return null; }
+function findingDomain(x){ const dv=domVer(x.version); if(dv) return dv;
+  const tg=(x.tags||[]).map(t=>String(t).toLowerCase()); for(const d of DOMAINS) if(tg.includes(d)) return d; return null; }
+document.querySelectorAll('.domtab').forEach(b=>b.onclick=async()=>{
+  document.querySelectorAll('.domtab').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  CURRENT_DOMAIN=b.dataset.dom;
+  renderResults();
+  await loadDataset();   // reloads the rows for the selected domain (or all)
+  loadDatasets();
+  loadFindings();
+});
+
 /* ================= RESULTS ================= */
 let RROWS=[], RENDERED=[], HISTRAW=[], sortK='iteration', sortDir=-1;
 async function loadResults() {
@@ -199,10 +229,10 @@ function rdetail(r){
     <div id="ex-${r._i}" class="examples" style="margin-top:14px"></div></div>`;
 }
 function renderResults(){
-  const rows=[...RROWS].sort((a,b)=>{let av=a[sortK],bv=b[sortK]; if(sortK==='cfg'){av=a.cfg.model;bv=b.cfg.model;} return typeof av==='number'?(av-bv)*sortDir:String(av).localeCompare(String(bv))*sortDir;});
+  const rows=[...RROWS].filter(r=>domMatch(rowDomain(r))).sort((a,b)=>{let av=a[sortK],bv=b[sortK]; if(sortK==='cfg'){av=a.cfg.model;bv=b.cfg.model;} return typeof av==='number'?(av-bv)*sortDir:String(av).localeCompare(String(bv))*sortDir;});
   rows.forEach((r,i)=>r._i=i); RENDERED=rows;
   $('rtb').innerHTML = rows.map((r,i)=>`
-    <tr class="row" data-i="${i}"><td>${r.iteration}</td><td>${r.date}</td><td><span class="chip cot">${r.dataset_version||'–'}</span></td><td><span class="chip mono">${r.run_id}</span></td>
+    <tr class="row" data-i="${i}"><td>${r.iteration}</td><td>${r.date}</td><td><span class="chip mono">${rowDomain(r)}</span> <span class="chip cot">${r.dataset_version||'–'}</span></td><td><span class="chip mono">${r.run_id}</span></td>
       <td>${r.system.length>34?r.system.slice(0,34)+'…':r.system}</td><td>${cfgChips(r.cfg,r.system)}</td><td class="note">${r.note}</td>
       <td class="num">${r.n}</td><td class="num">${pct(r.precision)}</td><td class="num">${pct(r.recall)}</td><td class="num f1">${pct(r.f1)}</td><td class="num">${pct(r.accuracy)}</td>
       <td class="num">${r.cost==null?'–':'$'+r.cost.toFixed(4)}</td></tr>
@@ -255,12 +285,12 @@ function modelClass(r){
 function drawTrend(){
   // x = dataset version (ordered); one line per model class (frozen traces benchmark
   // difficulty; trained points sit above it). Latest iteration wins per (class, version).
-  const cats=[...new Set(RROWS.map(r=>r.dataset_version).filter(Boolean))]
+  const cats=[...new Set(RROWS.filter(r=>domMatch(rowDomain(r))).map(r=>r.dataset_version).filter(Boolean))]
     .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   if(!cats.length){ $('trend').innerHTML=''; return; }
   const ci_=Object.fromEntries(cats.map((c,i)=>[c,i]));
   const byClass={};
-  RROWS.filter(r=>r.dataset_version).forEach(r=>{
+  RROWS.filter(r=>r.dataset_version && domMatch(rowDomain(r))).forEach(r=>{
     const cls=modelClass(r); byClass[cls]=byClass[cls]||{};
     const cur=byClass[cls][r.dataset_version];
     if(!cur || r.iteration>cur.it) byClass[cls][r.dataset_version]={f1:r.f1,it:r.iteration};
@@ -285,19 +315,23 @@ function drawTrend(){
 document.querySelectorAll('#rtbl th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k; if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=(k==='date'||k==='iteration')?-1:1;} renderResults();});
 
 /* ================= DATASET ================= */
-let DROWS=[];
+let DROWS=[], ALLDOMAINS=['it'];
 async function loadDataset(){
-  const domains = await getJson('../data/domains.json');
-  if (domains===null){ showErr('Could not load data/domains.json — serve over http (python viz/serve.py).'); return; }
-  $('fdomain').innerHTML = domains.map(d=>`<option>${d}</option>`).join('');
-  await loadDomain(domains[0]);
+  ALLDOMAINS = await getJson('../data/domains.json') || ['it'];
+  await loadDomain(CURRENT_DOMAIN==='all' ? 'all' : CURRENT_DOMAIN);
 }
 async function loadDomain(domain){
   DROWS=[];
-  // synthetic splits for this domain
-  for (const sp of ['train','val','test']){ const rows=await getJsonl(`../data/${domain}/${sp}.jsonl`); if(rows)rows.forEach(r=>{r.split=sp;DROWS.push(r);}); }
-  // real splits (IT domain) — tagged by their own `source` field; test_* are views, skip
-  for (const sp of ['train','val','test']){ const rows=await getJsonl(`../data/real/${sp}.jsonl`); if(rows)rows.forEach(r=>{r.split=sp;DROWS.push(r);}); }
+  const doms = (domain==='all') ? ALLDOMAINS : [domain];
+  for (const dom of doms){
+    // synthetic splits
+    for (const sp of ['train','val','test']){ const rows=await getJsonl(`../data/${dom}/${sp}.jsonl`);
+      if(rows)rows.forEach(r=>{r.split=sp;r._domain=dom;DROWS.push(r);}); }
+    // real splits — IT lives in data/real, every other domain in data/<dom>/real (test_* are views; skip)
+    const realbase = (dom==='it') ? 'real' : `${dom}/real`;
+    for (const sp of ['train','val','test']){ const rows=await getJsonl(`../data/${realbase}/${sp}.jsonl`);
+      if(rows)rows.forEach(r=>{r.split=sp;r._domain=dom;DROWS.push(r);}); }
+  }
   const uniq=k=>[...new Set(DROWS.map(r=>r[k]).filter(v=>v!=null))].sort();
   dopts($('fsource'),uniq('source')); dopts($('fsplit'),uniq('split')); dopts($('fsub'),uniq('subcategory'));
   dopts($('fhard'),uniq('hardening')); dopts($('fdiff'),uniq('difficulty')); dopts($('ffmt'),uniq('format'));
@@ -313,6 +347,7 @@ function renderDataset(){const rows=dfiltered();
   $('hdrsub') && null;
   $('count').textContent=`${rows.length} / ${DROWS.length} rows shown · ${DROWS.filter(r=>r.label===1).length} pos / ${DROWS.filter(r=>r.label===0).length} neg`;
   $('list').innerHTML=rows.slice(0,1000).map(r=>`<div class="card"><div class="chips">
+    <span class="chip mono">${r.domain||r._domain||''}</span>
     <span class="chip ${r.label===1?'pos':'neg'}">${r.label===1?'TRIGGER':'PASS'}</span>
     <span class="chip ${r.source==='real'?'hard':'cot'}">${r.source}</span><span class="chip">${r.subcategory}</span>
     <span class="chip ${r.difficulty==='hard'?'hard':''}">${r.difficulty}</span>${r.hardening&&!['core','real'].includes(r.hardening)?`<span class="chip cot">${r.hardening}</span>`:''}<span class="chip">${r.format}</span><span class="chip">${r.split}</span>
@@ -321,7 +356,6 @@ function renderDataset(){const rows=dfiltered();
   $('stats').innerHTML=dbars('By source (pos/neg)',rows,'source',true)+dbars('By subcategory (pos/neg)',rows,'subcategory',true)+dbars('By hardening (pos/neg)',rows,'hardening',true)+dbars('By format',rows,'format',false)+dbars('By split',rows,'split',false);
 }
 ['q','fsource','fsplit','flabel','fsub','fhard','fdiff','ffmt'].forEach(id=>$(id).addEventListener('input',renderDataset));
-$('fdomain').addEventListener('change',()=>loadDomain($('fdomain').value));
 
 /* ================= DATASETS ================= */
 function deltaSpan(cur, prev, asPct=true){
@@ -365,7 +399,9 @@ function ablationTable(version){
 async function loadDatasets(){
   const ds = await getJsonl('../results/datasets.jsonl');
   if (ds===null || !ds.length){ $('datasets').innerHTML='<div class="sub">No dataset versions yet. Register one: <code>python scripts/snapshot_dataset.py --version ds-v0 --note "…"</code></div>'; return; }
-  const sorted=[...ds].sort((a,b)=>a.version.localeCompare(b.version, undefined, {numeric:true}));
+  let sorted=[...ds].sort((a,b)=>a.version.localeCompare(b.version, undefined, {numeric:true}));
+  if (CURRENT_DOMAIN!=='all') sorted=sorted.filter(v=>domVer(v.version)===CURRENT_DOMAIN);
+  if (!sorted.length){ $('datasets').innerHTML=`<div class="sub">No dataset versions for <b>${CURRENT_DOMAIN}</b>.</div>`; return; }
   let html='';
   for (let i=sorted.length-1;i>=0;i--){
     const v=sorted[i], prev=sorted[i-1]||null, st=v.stats, pst=prev?.stats;
@@ -391,8 +427,11 @@ async function loadFindings(){
   const f = await getJsonl('../results/findings.jsonl');
   if (f===null || !f.length){ $('findings').innerHTML='<div class="sub">No findings yet. Add one: <code>python scripts/add_finding.py --version v1 --title "…" --finding "…" --suggestion "…"</code></div>'; return; }
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  // domain filter: a domain view also shows cross-cutting findings (multi-domain / untagged)
+  const ff=(CURRENT_DOMAIN==='all') ? f : f.filter(x=>{const d=findingDomain(x); return d===CURRENT_DOMAIN || d===null;});
+  if (!ff.length){ $('findings').innerHTML=`<div class="sub">No findings for <b>${CURRENT_DOMAIN}</b>.</div>`; return; }
   let html='';
-  for (let i=f.length-1;i>=0;i--){ const x=f[i];
+  for (let i=ff.length-1;i>=0;i--){ const x=ff[i];
     const sug=(x.suggestions||[]).map(s=>`<li>${esc(s)}</li>`).join('');
     const tags=(x.tags||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join(' ');
     html += `<div class="vcard">
