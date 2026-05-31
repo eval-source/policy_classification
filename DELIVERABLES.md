@@ -131,8 +131,13 @@ is sharp → it generalizes to an entirely different contract corpus and suppres
 held-out boilerplate (caveat essentially removed). Marketing's *outbound-claim-vs-any-descriptive-prose*
 boundary is fuzzy → the model generalizes on positives but **over-triggers on unseen negatives** (movie
 reviews, even Wikipedia), so same-source F1 (98.7) overstates real cross-source performance (87.1). The
-honest takeaway: **same-source metrics can be optimistic for fuzzy-boundary policies** — broaden the
-negative training distribution or deploy high-recall + a precision gate (§6).
+honest takeaway: **same-source metrics can be optimistic for fuzzy-boundary policies.**
+
+**The fix, validated:** broadening Marketing's negative training distribution (+500 diverse Wikipedia/
+tweet negatives, deduped against the eval; movie reviews kept fully out of training) recovered the
+held-out **movie-review specificity 73→93** and cross-source **F1 87.1→97.1** (gap now 1.6pt ≈ Legal's),
+with recall held at 99 and only a small same-source cost (98.7→95.9). For fuzzy-boundary policies,
+**negative-distribution breadth is the lever for cross-source robustness** — more than positive coverage.
 
 ## 6. What I'd do next
 
@@ -140,10 +145,10 @@ negative training distribution or deploy high-recall + a precision gate (§6).
   dominant model.
 - **Human-labeled PII gold set + explicit sensitivity threshold** with stakeholders — the residual PII
   noise is irreducible from metadata; or run a high-recall model + human precision gate in production.
-- **Cross-source generalization** — **done** (§5): Legal generalizes (98.6), Marketing partially (87.1,
-  over-triggers on unseen negatives). **Next:** broaden Marketing's negative training distribution
-  (diverse non-marketing prose across genres) and re-run the cross-source probe to confirm the precision
-  recovers; consider a precision gate for the fuzzy-boundary domain.
+- **Cross-source generalization** — **done + fix validated** (§5): Legal generalizes (98.6); Marketing
+  over-triggered on unseen negatives (87.1), and broadening the negative training distribution recovered
+  it to 97.1 (held-out movie-review spec 73→93). Remaining: a recall-tunable threshold / precision gate
+  per operating point for the fuzzy-boundary domain, and a cross-source probe with a new *positive* source.
 - **Held-out-*policy* generalization** (Part 2's open axis): train on IT, eval on an unseen IT-adjacent
   policy to separate "learned the format" from "learned the semantics."
 - **Extend to Legal + Marketing** domains — **done** (§5); both reuse the IT recipe via `domains/` + the
