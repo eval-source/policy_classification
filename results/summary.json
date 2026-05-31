@@ -1,24 +1,24 @@
 [
   {
-    "name": "MODEL tinker://f9deaf54-09a5-5de1-9918-5c3a53a0b908:train:0/sampler_weights/final",
-    "n": 178,
-    "precision": 0.9722222222222222,
+    "name": "MODEL tinker://ac0fcea6-0855-5968-8ee2-b17fef9a6eb2:train:0/sampler_weights/final",
+    "n": 183,
+    "precision": 0.9473684210526315,
     "recall": 1.0,
-    "f1": 0.9859154929577464,
-    "accuracy": 0.9943820224719101,
+    "f1": 0.972972972972973,
+    "accuracy": 0.9890710382513661,
     "f1_ci": [
-      0.9508196721311475,
+      0.927536231884058,
       1.0
     ],
-    "tp": 35,
-    "fp": 1,
+    "tp": 36,
+    "fp": 2,
     "fn": 0,
-    "tn": 142,
+    "tn": 145,
     "unparsed": 0,
     "by_subcategory": {
-      "contract": {
-        "n": 31,
-        "n_pos": 31,
+      "brand_campaign_copy": {
+        "n": 36,
+        "n_pos": 36,
         "n_neg": 0,
         "precision": 1.0,
         "recall": 1.0,
@@ -28,34 +28,22 @@
         "fp": 0,
         "fn": 0
       },
-      "eula_tos_privacy": {
-        "n": 60,
+      "market_fact": {
+        "n": 85,
         "n_pos": 0,
-        "n_neg": 60,
+        "n_neg": 85,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
-        "accuracy": 0.9833333333333333,
-        "specificity": 0.9833333333333333,
-        "fp": 1,
+        "accuracy": 0.9764705882352941,
+        "specificity": 0.9764705882352941,
+        "fp": 2,
         "fn": 0
       },
-      "indemnity_liability": {
-        "n": 1,
-        "n_pos": 1,
-        "n_neg": 0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": null,
-        "fp": 0,
-        "fn": 0
-      },
-      "legal_news": {
-        "n": 83,
+      "opinion_review": {
+        "n": 62,
         "n_pos": 0,
-        "n_neg": 83,
+        "n_neg": 62,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -63,64 +51,40 @@
         "specificity": 1.0,
         "fp": 0,
         "fn": 0
-      },
-      "nda_confidentiality": {
-        "n": 2,
-        "n_pos": 2,
-        "n_neg": 0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": null,
-        "fp": 0,
-        "fn": 0
-      },
-      "privilege_litigation": {
-        "n": 1,
-        "n_pos": 1,
-        "n_neg": 0,
-        "precision": 1.0,
-        "recall": 1.0,
-        "f1": 1.0,
-        "accuracy": 1.0,
-        "specificity": null,
-        "fp": 0,
-        "fn": 0
       }
     },
     "by_difficulty": {
       "natural": {
-        "n": 178,
-        "n_pos": 35,
-        "n_neg": 143,
-        "precision": 0.9722222222222222,
+        "n": 183,
+        "n_pos": 36,
+        "n_neg": 147,
+        "precision": 0.9473684210526315,
         "recall": 1.0,
-        "f1": 0.9859154929577464,
-        "accuracy": 0.9943820224719101,
-        "specificity": 0.993006993006993,
-        "fp": 1,
+        "f1": 0.972972972972973,
+        "accuracy": 0.9890710382513661,
+        "specificity": 0.9863945578231292,
+        "fp": 2,
         "fn": 0
       }
     },
     "by_hardening": {
       "real": {
-        "n": 178,
-        "n_pos": 35,
-        "n_neg": 143,
-        "precision": 0.9722222222222222,
+        "n": 183,
+        "n_pos": 36,
+        "n_neg": 147,
+        "precision": 0.9473684210526315,
         "recall": 1.0,
-        "f1": 0.9859154929577464,
-        "accuracy": 0.9943820224719101,
-        "specificity": 0.993006993006993,
-        "fp": 1,
+        "f1": 0.972972972972973,
+        "accuracy": 0.9890710382513661,
+        "specificity": 0.9863945578231292,
+        "fp": 2,
         "fn": 0
       }
     },
     "usage": {
-      "prompt_tokens": 51041,
-      "completion_tokens": 392,
-      "est_cost_usd": 0.005261,
+      "prompt_tokens": 48642,
+      "completion_tokens": 404,
+      "est_cost_usd": 0.005026,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -128,6 +92,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it041-20260531_015044-b69dfd__model.jsonl"
+    "preds_file": "results/preds_runs/it045-20260531_104207-c06242__model.jsonl"
   }
 ]
