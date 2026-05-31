@@ -41,3 +41,8 @@ results/label_audit.jsonl
 # legal/marketing generated datasets (reproducible from seeds)
 data/legal/*.jsonl
 data/marketing/*.jsonl
+
+# real data fetched from HF for legal/marketing: not redistributable (licenses) — same policy
+# as data/real/. Reproduce with: python data/<domain>/fetch_real.py
+data/legal/real/
+data/marketing/real/
