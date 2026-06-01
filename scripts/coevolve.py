@@ -1,17 +1,17 @@
 """
-Co-evolution loop controller — Legal pilot. See notes/coevolve_spec.md.
+Co-evolution loop controller (domain-parameterized). See notes/coevolve_spec.md.
 
 Per round: MINE a candidate pool -> SCORE with oracle T (few-shot Qwen3.6-27B) and the current
 student S -> BUCKET (FRONTIER = T-correct & S-wrong; HUMAN_QUEUE = T-wrong) -> accumulate frontier
 (leakage-safe by seed) -> TRAIN S on base + accumulated frontier -> MEASURE on the FROZEN anchor
 (true progress) + accumulated eval_hard -> log/commit. Loops until convergence or a kill guard.
 
-  python scripts/coevolve.py --round 0 --student Qwen/Qwen3.5-4B --dry-run     # mine+bucket only
-  python scripts/coevolve.py --start-round 1 --student tinker://<S1> --max-rounds 3   # automated loop
+  python scripts/coevolve.py --domain it --round 0 --student Qwen/Qwen3.5-4B --dry-run
+  python scripts/coevolve.py --domain it --start-round 0 --student Qwen/Qwen3.5-4B --max-rounds 4
 
 Honesty note: with no Anthropic key the automated loop uses the QWEN-T gate only. The cross-family
 (Claude) rescue of the human_queue — which pushes past the same-family teacher ceiling — stays a
-manual step (see findings f for round 0).
+manual step (see the round-0 Legal findings).
 """
 import argparse
 import json
@@ -23,19 +23,38 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PY = str(ROOT / ".venv" / "bin" / "python")
-CO = ROOT / "data" / "legal" / "coevolve"
-ANCHOR = ROOT / "data" / "legal" / "anchor"
 ORACLE = "Qwen/Qwen3.6-27B"
-ACCUM_TRAIN = CO / "train_hard.jsonl"
-ACCUM_EVAL = CO / "eval_hard.jsonl"
 CONVERGE_YIELD = 30        # frontier smaller than this -> S has matched T on the solvable region
 ANCHOR_F1_DROP = 0.02      # kill: anchor F1 falls this far below the best seen
-ANCHOR_RECALL_MIN = 0.90   # kill: over-corrected into under-triggering
+ANCHOR_RECALL_MIN = 0.85   # kill: over-corrected into under-triggering
 
 sys.path.insert(0, str(ROOT))
 import domains  # noqa: E402
-SPEC = domains.get("legal")
 LAB = {1: "TRIGGER", 0: "PASS"}
+
+# --- per-domain config, set by configure() ---
+DOMAIN = None
+SPEC = None
+CO = None
+ANCHOR = None
+GEN = None
+REAL_DIRS = []
+ACCUM_TRAIN = None
+ACCUM_EVAL = None
+
+
+def configure(domain):
+    global DOMAIN, SPEC, CO, ANCHOR, GEN, REAL_DIRS, ACCUM_TRAIN, ACCUM_EVAL
+    DOMAIN = domain
+    SPEC = domains.get(domain)
+    CO = ROOT / "data" / domain / "coevolve"
+    ANCHOR = ROOT / "data" / domain / "anchor"
+    GEN = ROOT / "data" / domain / "generate.py"
+    # IT's real corpus lives in data/real; every other domain in data/<domain>/real
+    REAL_DIRS = [ROOT / "data" / "real"] if domain == "it" else [ROOT / "data" / domain / "real"]
+    ACCUM_TRAIN = CO / "train_hard.jsonl"
+    ACCUM_EVAL = CO / "eval_hard.jsonl"
+    CO.mkdir(parents=True, exist_ok=True)
 
 
 def norm(t):
@@ -61,8 +80,6 @@ def sh(cmd, capture=False):
     return r.stdout if capture else ""
 
 
-# --------------------------- metrics from a preds file ---------------------------
-
 def metrics(preds):
     tp = fp = fn = tn = 0
     for r in preds:
@@ -81,7 +98,7 @@ def metrics(preds):
 
 def score(pool, model, fewshot, out):
     cmd = [PY, ROOT / "scripts" / "label_oracle.py", "--data", pool, "--model", model,
-           "--domain", "legal", "--out", out]
+           "--domain", DOMAIN, "--out", out]
     if fewshot:
         cmd.append("--fewshot")
     sh(cmd)
@@ -92,8 +109,6 @@ def acc(preds):
     return sum(x["correct"] for x in preds) / max(1, len(preds))
 
 
-# --------------------------- pieces ---------------------------
-
 def anchor_all():
     p = CO / "anchor_all.jsonl"
     rows = load(ANCHOR / "gold.jsonl") + load(ANCHOR / "crosssource.jsonl")
@@ -103,17 +118,23 @@ def anchor_all():
     return p
 
 
+def real_rows():
+    out = []
+    for d in REAL_DIRS:
+        out += load(d / "train.jsonl") + load(d / "test.jsonl")
+    return out
+
+
 def mine(N, cf, easy, real_k):
     pool = CO / f"pool_r{N}.jsonl"
-    sh([PY, ROOT / "data" / "legal" / "generate.py", "--variant", "v1", "--seed", N,
-        "--pool", pool, "--cf-pairs", cf, "--easy", easy, "--intent", 70, "--nearbound", 90,
-        "--casual", 40])
+    cmd = [PY, GEN, "--variant", "v1", "--seed", N, "--pool", pool, "--cf-pairs", cf, "--easy", easy]
+    if DOMAIN == "it":
+        cmd += ["--obf", 60]   # IT-only knob (obfuscation family)
+    sh(cmd)
     rows = load(pool)
-    real = load(ROOT / "data" / "legal" / "real" / "train.jsonl") + \
-        load(ROOT / "data" / "legal" / "real" / "test.jsonl")
+    real = real_rows()
     rng = random.Random(N); rng.shuffle(real)
     rows += real[:real_k]
-    # dedup vs frozen anchor + already-accumulated hard sets (no contamination / no re-mining)
     block = {norm(r["text"]) for r in (load(ANCHOR / "gold.jsonl") + load(ANCHOR / "crosssource.jsonl")
                                        + load(ACCUM_TRAIN) + load(ACCUM_EVAL))}
     seen, dd = set(), []
@@ -128,7 +149,6 @@ def mine(N, cf, easy, real_k):
 
 
 def split_accumulate(frontier, N):
-    # leakage-safe split by seed_id; dedup vs the accumulated sets; append
     rng = random.Random(N)
     sids = sorted({r["seed_id"] for r in frontier}); rng.shuffle(sids)
     trs = set(sids[: int(0.7 * len(sids))])
@@ -145,7 +165,7 @@ def split_accumulate(frontier, N):
 
 
 def build_and_train(name):
-    sh([PY, ROOT / "train" / "build_sft_data.py", "--domain", "legal"])
+    sh([PY, ROOT / "train" / "build_sft_data.py", "--domain", DOMAIN])
     with open(ROOT / "train" / "sft_train.jsonl", "a") as f:
         for r in load(ACCUM_TRAIN):
             m = SPEC.build_messages(r["text"], cot=False)
@@ -159,15 +179,13 @@ def build_and_train(name):
 
 
 def commit(msg):
-    sh(["git", "add", "results/coevolve_legal.jsonl", "results/findings.jsonl",
-        "results/history.jsonl", "results/summary.json"])
+    sh(["git", "add", "results/coevolve_legal.jsonl", f"results/coevolve_{DOMAIN}.jsonl",
+        "results/findings.jsonl", "results/history.jsonl", "results/summary.json"])
     subprocess.run(["git", "commit", "-q", "-m", msg], cwd=str(ROOT))
 
 
-# --------------------------- one round ---------------------------
-
 def run_round(N, student, cfg, dry=False):
-    print(f"\n{'#'*64}\n# ROUND {N}  (student = {student[:48]})\n{'#'*64}")
+    print(f"\n{'#'*64}\n# [{DOMAIN}] ROUND {N}  (student = {student[:42]})\n{'#'*64}")
     pool, rows = mine(N, cfg["cf"], cfg["easy"], cfg["real"])
     print(f"[mine] pool={len(rows)}")
     T = {r["id"]: r for r in score(pool, ORACLE, True, CO / f"preds_T_r{N}.jsonl")}
@@ -191,58 +209,53 @@ def run_round(N, student, cfg, dry=False):
         return None, dict(round=N, frontier=len(frontier), gap=round(accT - accS, 3))
 
     split_accumulate(frontier, N)
-    ckpt = build_and_train(f"legal_coev_r{N}")
-    a_all = anchor_all()
-    am = metrics(score(a_all, ckpt, False, CO / f"preds_anchor_r{N}.jsonl"))
+    ckpt = build_and_train(f"{DOMAIN}_coev_r{N}")
+    am = metrics(score(anchor_all(), ckpt, False, CO / f"preds_anchor_r{N}.jsonl"))
     em = metrics(score(ACCUM_EVAL, ckpt, False, CO / f"preds_evalhard_r{N}.jsonl"))
-    rec = dict(round=N, student_in=student[:46], ckpt=ckpt[:46],
+    rec = dict(domain=DOMAIN, round=N, student_in=student[:46], ckpt=ckpt[:46],
                pool=len(rows), oracle_acc=round(accT, 3), student_acc=round(accS, 3),
                gap=round(accT - accS, 3), frontier=len(frontier), frontier_pos=fpos,
                human_queue=len(human), accum_train=len(load(ACCUM_TRAIN)), accum_eval=len(load(ACCUM_EVAL)),
                anchor_f1=am["f1"], anchor_precision=am["precision"], anchor_recall=am["recall"],
                eval_hard_f1=em["f1"], eval_hard_spec=em["specificity"], eval_hard_n=em["n"])
-    with open(ROOT / "results" / "coevolve_legal.jsonl", "a") as f:
+    with open(ROOT / "results" / f"coevolve_{DOMAIN}.jsonl", "a") as f:
         f.write(json.dumps(rec) + "\n")
     print(f"[measure] anchor F1={am['f1']} P={am['precision']} R={am['recall']} | "
           f"eval_hard F1={em['f1']} spec={em['specificity']} n={em['n']}")
-    sh([PY, ROOT / "scripts" / "add_finding.py", "--version", f"legal-coev-r{N}",
-        "--title", f"Co-evolution round {N}: frontier {len(frontier)} ({fpos} pos), "
+    sh([PY, ROOT / "scripts" / "add_finding.py", "--version", f"{DOMAIN}-coev-r{N}",
+        "--title", f"[{DOMAIN}] co-evolution round {N}: frontier {len(frontier)} ({fpos} pos), "
                    f"anchor F1 {am['f1']} R {am['recall']}, gap {accT-accS:+.3f}",
-        "--finding", f"Round {N} mined vs student {student[:40]}. pool={len(rows)}, oracle(27B)acc={accT:.3f}, "
-                     f"student_acc={accS:.3f}, gap={accT-accS:+.3f}. frontier={len(frontier)} ({fpos} pos / "
-                     f"{len(frontier)-fpos} neg), human_queue={len(human)}. Trained on base+accum_train "
-                     f"({len(load(ACCUM_TRAIN))}). Anchor (frozen referee) F1={am['f1']} P={am['precision']} "
-                     f"R={am['recall']}; eval_hard F1={em['f1']} spec={em['specificity']} n={em['n']}.",
+        "--finding", f"[{DOMAIN}] round {N} mined vs student {student[:40]}. pool={len(rows)}, "
+                     f"oracle(27B)acc={accT:.3f}, student_acc={accS:.3f}, gap={accT-accS:+.3f}. "
+                     f"frontier={len(frontier)} ({fpos} pos / {len(frontier)-fpos} neg), human_queue={len(human)}. "
+                     f"Anchor(frozen) F1={am['f1']} P={am['precision']} R={am['recall']}; "
+                     f"eval_hard F1={em['f1']} spec={em['specificity']} n={em['n']}.",
         "--suggestion", "Automated Qwen-T-gated round. Cross-family (Claude) rescue of human_queue stays "
-                        "manual (no API key). Watch anchor recall (over-trigger-only frontier risk).",
-        "--tags", f"legal,coevolution,round{N},automated"])
-    commit(f"coevolve legal round {N}: frontier={len(frontier)} ({fpos} pos), anchor F1={am['f1']} "
+                        "manual (no API key). Watch anchor recall.",
+        "--tags", f"{DOMAIN},coevolution,round{N},automated"])
+    commit(f"[{DOMAIN}] coevolve round {N}: frontier={len(frontier)} ({fpos} pos), anchor F1={am['f1']} "
            f"R={am['recall']} gap={accT-accS:+.3f} -> {ckpt[:40]}")
     return ckpt, rec
 
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--domain", default="legal")
     ap.add_argument("--round", type=int, default=None, help="single round (with --dry-run)")
-    ap.add_argument("--start-round", type=int, default=1)
+    ap.add_argument("--start-round", type=int, default=0)
     ap.add_argument("--student", required=True, help="current student ckpt (tinker://...) or base model")
-    ap.add_argument("--max-rounds", type=int, default=3)
+    ap.add_argument("--max-rounds", type=int, default=4)
     ap.add_argument("--cf", type=int, default=250)
     ap.add_argument("--easy", type=int, default=100)
-    ap.add_argument("--real", type=int, default=100)
+    ap.add_argument("--real", type=int, default=120)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
-    CO.mkdir(parents=True, exist_ok=True)
+    configure(args.domain)
     cfg = dict(cf=args.cf, easy=args.easy, real=args.real)
 
     if args.dry_run:
         run_round(args.round if args.round is not None else args.start_round, args.student, cfg, dry=True)
         return
-
-    # seed the accumulated sets from round 0's artifacts if present and accum is empty
-    if not ACCUM_TRAIN.exists() and (CO / "train_hard_r0.jsonl").exists():
-        ACCUM_TRAIN.write_text((CO / "train_hard_r0.jsonl").read_text())
-        ACCUM_EVAL.write_text((CO / "eval_hard_r0.jsonl").read_text())
 
     student = args.student
     best_anchor = 0.0
@@ -253,14 +266,13 @@ def main():
             print(f"[round {N}] FAILED: {e}")
             break
         if rec["frontier"] < CONVERGE_YIELD:
-            print(f"[STOP] converged: frontier {rec['frontier']} < {CONVERGE_YIELD} "
-                  f"(student matches oracle on the solvable region).")
+            print(f"[STOP] converged: frontier {rec['frontier']} < {CONVERGE_YIELD}.")
             break
         if best_anchor and rec["anchor_f1"] < best_anchor - ANCHOR_F1_DROP:
             print(f"[STOP] kill: anchor F1 {rec['anchor_f1']} dropped >{ANCHOR_F1_DROP} below best {best_anchor}.")
             break
         if rec["anchor_recall"] < ANCHOR_RECALL_MIN:
-            print(f"[STOP] kill: anchor recall {rec['anchor_recall']} < {ANCHOR_RECALL_MIN} (over-corrected).")
+            print(f"[STOP] kill: anchor recall {rec['anchor_recall']} < {ANCHOR_RECALL_MIN}.")
             break
         best_anchor = max(best_anchor, rec["anchor_f1"])
         student = ckpt

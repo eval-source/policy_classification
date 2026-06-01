@@ -47,6 +47,6 @@ data/marketing/*.jsonl
 data/legal/real/
 data/marketing/real/
 
-# co-evolution pilot: frozen anchor + per-round candidate pools (synthetic + real-derived)
-data/legal/anchor/
-data/legal/coevolve/
+# co-evolution: frozen anchor + per-round candidate pools (synthetic + real-derived), any domain
+data/*/anchor/
+data/*/coevolve/
