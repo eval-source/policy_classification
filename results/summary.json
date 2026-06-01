@@ -1,46 +1,82 @@
 [
   {
-    "name": "MODEL tinker://623dd689-570e-59b4-9488-d2efd570dea3:train:0/sampler_weights/final",
-    "n": 21,
-    "precision": 0.0,
-    "recall": 0.0,
-    "f1": 0.0,
-    "accuracy": 1.0,
+    "name": "MODEL tinker://e7d0eee1-1edb-5f5e-9352-c764d2f7f68e:train:0/sampler_weights/final",
+    "n": 332,
+    "precision": 0.8014184397163121,
+    "recall": 1.0,
+    "f1": 0.889763779527559,
+    "accuracy": 0.9156626506024096,
     "f1_ci": [
-      0.0,
-      0.0
+      0.8473282442748091,
+      0.9288389513108614
     ],
-    "tp": 0,
-    "fp": 0,
+    "tp": 113,
+    "fp": 28,
     "fn": 0,
-    "tn": 21,
+    "tn": 191,
     "unparsed": 0,
     "by_subcategory": {
-      "compliance_obligation": {
-        "n": 1,
+      "casual_legal_reference": {
+        "n": 6,
         "n_pos": 0,
-        "n_neg": 1,
+        "n_neg": 6,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "compliance_obligation": {
+        "n": 12,
+        "n_pos": 9,
+        "n_neg": 3,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
         "accuracy": 1.0,
         "specificity": 1.0,
         "fp": 0,
         "fn": 0
       },
       "contract": {
-        "n": 9,
-        "n_pos": 0,
-        "n_neg": 9,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "n": 76,
+        "n_pos": 63,
+        "n_neg": 13,
+        "precision": 0.984375,
+        "recall": 1.0,
+        "f1": 0.9921259842519685,
+        "accuracy": 0.9868421052631579,
+        "specificity": 0.9230769230769231,
+        "fp": 1,
         "fn": 0
       },
       "eula_tos_privacy": {
+        "n": 52,
+        "n_pos": 0,
+        "n_neg": 52,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.9423076923076923,
+        "specificity": 0.9423076923076923,
+        "fp": 3,
+        "fn": 0
+      },
+      "indemnity_liability": {
+        "n": 38,
+        "n_pos": 24,
+        "n_neg": 14,
+        "precision": 0.9230769230769231,
+        "recall": 1.0,
+        "f1": 0.9600000000000001,
+        "accuracy": 0.9473684210526315,
+        "specificity": 0.8571428571428571,
+        "fp": 2,
+        "fn": 0
+      },
+      "legal_dept_logistics": {
         "n": 1,
         "n_pos": 0,
         "n_neg": 1,
@@ -52,10 +88,10 @@
         "fp": 0,
         "fn": 0
       },
-      "indemnity_liability": {
-        "n": 8,
+      "legal_news": {
+        "n": 72,
         "n_pos": 0,
-        "n_neg": 8,
+        "n_neg": 72,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -64,50 +100,134 @@
         "fp": 0,
         "fn": 0
       },
-      "nda_confidentiality": {
-        "n": 2,
+      "legislation": {
+        "n": 52,
         "n_pos": 0,
-        "n_neg": 2,
+        "n_neg": 52,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
+        "accuracy": 0.5961538461538461,
+        "specificity": 0.5961538461538461,
+        "fp": 21,
+        "fn": 0
+      },
+      "nda_confidentiality": {
+        "n": 19,
+        "n_pos": 13,
+        "n_neg": 6,
+        "precision": 0.9285714285714286,
+        "recall": 1.0,
+        "f1": 0.962962962962963,
+        "accuracy": 0.9473684210526315,
+        "specificity": 0.8333333333333334,
+        "fp": 1,
+        "fn": 0
+      },
+      "privilege_litigation": {
+        "n": 4,
+        "n_pos": 4,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
         "accuracy": 1.0,
-        "specificity": 1.0,
+        "specificity": null,
         "fp": 0,
         "fn": 0
       }
     },
     "by_difficulty": {
-      "hard": {
-        "n": 20,
-        "n_pos": 0,
-        "n_neg": 20,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
+      "easy": {
+        "n": 14,
+        "n_pos": 10,
+        "n_neg": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
         "accuracy": 1.0,
         "specificity": 1.0,
         "fp": 0,
         "fn": 0
       },
+      "hard": {
+        "n": 103,
+        "n_pos": 60,
+        "n_neg": 43,
+        "precision": 0.9375,
+        "recall": 1.0,
+        "f1": 0.967741935483871,
+        "accuracy": 0.9611650485436893,
+        "specificity": 0.9069767441860465,
+        "fp": 4,
+        "fn": 0
+      },
       "natural": {
-        "n": 1,
-        "n_pos": 0,
-        "n_neg": 1,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "n": 215,
+        "n_pos": 43,
+        "n_neg": 172,
+        "precision": 0.6417910447761194,
+        "recall": 1.0,
+        "f1": 0.7818181818181819,
+        "accuracy": 0.8883720930232558,
+        "specificity": 0.8604651162790697,
+        "fp": 24,
         "fn": 0
       }
     },
     "by_hardening": {
+      "casual": {
+        "n": 3,
+        "n_pos": 1,
+        "n_neg": 2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
+      "core": {
+        "n": 14,
+        "n_pos": 10,
+        "n_neg": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": 1.0,
+        "fp": 0,
+        "fn": 0
+      },
       "counterfactual": {
-        "n": 20,
+        "n": 91,
+        "n_pos": 55,
+        "n_neg": 36,
+        "precision": 0.9322033898305084,
+        "recall": 1.0,
+        "f1": 0.9649122807017544,
+        "accuracy": 0.9560439560439561,
+        "specificity": 0.8888888888888888,
+        "fp": 4,
+        "fn": 0
+      },
+      "intent_only": {
+        "n": 4,
+        "n_pos": 4,
+        "n_neg": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "accuracy": 1.0,
+        "specificity": null,
+        "fp": 0,
+        "fn": 0
+      },
+      "near_boundary": {
+        "n": 5,
         "n_pos": 0,
-        "n_neg": 20,
+        "n_neg": 5,
         "precision": 0.0,
         "recall": 0.0,
         "f1": 0.0,
@@ -117,22 +237,22 @@
         "fn": 0
       },
       "real": {
-        "n": 1,
-        "n_pos": 0,
-        "n_neg": 1,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 1.0,
-        "specificity": 1.0,
-        "fp": 0,
+        "n": 215,
+        "n_pos": 43,
+        "n_neg": 172,
+        "precision": 0.6417910447761194,
+        "recall": 1.0,
+        "f1": 0.7818181818181819,
+        "accuracy": 0.8883720930232558,
+        "specificity": 0.8604651162790697,
+        "fp": 24,
         "fn": 0
       }
     },
     "usage": {
-      "prompt_tokens": 5265,
-      "completion_tokens": 42,
-      "est_cost_usd": 0.000543,
+      "prompt_tokens": 100158,
+      "completion_tokens": 805,
+      "est_cost_usd": 0.010338,
       "price_basis": {
         "prefill": 0.1,
         "sample": 0.4,
@@ -140,6 +260,6 @@
       },
       "price_confirmed": false
     },
-    "preds_file": "results/preds_runs/it061-20260531_215634-352269__model.jsonl"
+    "preds_file": "results/preds_runs/it066-20260601_020742-77fab1__model.jsonl"
   }
 ]
