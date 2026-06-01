@@ -326,11 +326,25 @@ def main():
     ap.add_argument("--nearbound", type=int, default=110)
     ap.add_argument("--casual", type=int, default=120)
     ap.add_argument("--noise-rate", type=float, default=0.4)
+    ap.add_argument("--pool", default=None,
+                    help="emit one UNSPLIT candidate-pool file (path) instead of train/val/test "
+                         "splits — for the co-evolution loop (rows keep their seed_id)")
     args = ap.parse_args()
     easy = args.easy if args.easy is not None else (700 if args.variant == "v0" else 480)
     sizes = dict(easy=easy, cf_pairs=args.cf_pairs, intent=args.intent,
                  nearbound=args.nearbound, casual=args.casual)
     rows = build(args.variant, args.seed, sizes, args.noise_rate)
+
+    if args.pool:
+        outp = Path(args.pool)
+        outp.parent.mkdir(parents=True, exist_ok=True)
+        with outp.open("w") as f:
+            for r in rows:
+                f.write(json.dumps(r) + "\n")
+        pos = sum(r["label"] for r in rows)
+        print(f"Pool: wrote {len(rows)} rows ({pos} pos / {len(rows)-pos} neg) -> {outp}")
+        return
+
     splits = split_by_seed(rows, args.seed)
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     for name, items in splits.items():
