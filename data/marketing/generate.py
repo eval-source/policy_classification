@@ -145,7 +145,39 @@ def cf_promo_vs_planning(rng, fmt):
     return pos, neg, "pricing_promo"
 
 
-CF = [cf_claim_vs_logistics, cf_claim_vs_fact, cf_copy_vs_opinion, cf_press_vs_news, cf_promo_vs_planning]
+def cf_claim_in_internal_note(rng, fmt):
+    # the claim text appears in BOTH, but one is approved outbound, the other is internal deliberation
+    pos = wrap(rng, fmt, "Approved — going live: \"3x faster than any competitor.\" Ships on the site today.", subject="approved claim")
+    neg = wrap(rng, fmt, "Internal: should we claim \"3x faster than any competitor\"? We don't have the "
+              "benchmark yet, so NOTHING is approved — just discussing.", subject="internal")
+    return pos, neg, "efficacy_competitive_claim"
+
+
+def cf_opinion_with_superlative(rng, fmt):
+    p = rng.choice(PRODUCTS)
+    pos = wrap(rng, "adcopy", f"Ad headline (publishing): \"{p} — the best CRM, guaranteed.\"", subject="ad")
+    neg = wrap(rng, fmt, f"personally i think {p} is the best CRM out there, way better than the rest — "
+              f"but that's just my opinion, not a marketing line", subject="re: product")
+    return pos, neg, "efficacy_competitive_claim"
+
+
+def cf_competitor_claim(rng, fmt):
+    p = rng.choice(PRODUCTS)
+    pos = wrap(rng, "adcopy", f"Our new banner: \"{p} is the #1 rated platform — switch today.\"", subject="banner")
+    neg = wrap(rng, fmt, f"heads up, [Competitor]'s ad is claiming THEY are #1 rated — annoying but it's "
+              f"their claim, nothing for us to publish", subject="competitor")
+    return pos, neg, "efficacy_competitive_claim"
+
+
+def cf_fact_phrased_as_claim(rng, fmt):
+    pos = wrap(rng, fmt, "We'll run the line \"cuts costs by 50%\" in the campaign — pushing live this week.", subject="claim")
+    neg = wrap(rng, fmt, "A third-party study reported cost reductions of up to 50% across the category — "
+              "useful data, but it's not our claim to make.", subject="research")
+    return pos, neg, "efficacy_competitive_claim"
+
+
+CF = [cf_claim_vs_logistics, cf_claim_vs_fact, cf_copy_vs_opinion, cf_press_vs_news, cf_promo_vs_planning,
+      cf_claim_in_internal_note, cf_opinion_with_superlative, cf_competitor_claim, cf_fact_phrased_as_claim]
 
 
 def near_boundary(rng, fmt):
@@ -294,11 +326,25 @@ def main():
     ap.add_argument("--nearbound", type=int, default=110)
     ap.add_argument("--casual", type=int, default=120)
     ap.add_argument("--noise-rate", type=float, default=0.4)
+    ap.add_argument("--pool", default=None,
+                    help="emit one UNSPLIT candidate-pool file (path) instead of train/val/test "
+                         "splits — for the co-evolution loop (rows keep their seed_id)")
     args = ap.parse_args()
     easy = args.easy if args.easy is not None else (700 if args.variant == "v0" else 480)
     sizes = dict(easy=easy, cf_pairs=args.cf_pairs, intent=args.intent,
                  nearbound=args.nearbound, casual=args.casual)
     rows = build(args.variant, args.seed, sizes, args.noise_rate)
+
+    if args.pool:
+        outp = Path(args.pool)
+        outp.parent.mkdir(parents=True, exist_ok=True)
+        with outp.open("w") as f:
+            for r in rows:
+                f.write(json.dumps(r) + "\n")
+        pos = sum(r["label"] for r in rows)
+        print(f"Pool: wrote {len(rows)} rows ({pos} pos / {len(rows)-pos} neg) -> {outp}")
+        return
+
     splits = split_by_seed(rows, args.seed)
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     for name, items in splits.items():

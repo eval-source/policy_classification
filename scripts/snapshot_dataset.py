@@ -20,10 +20,12 @@ ROOT = Path(__file__).resolve().parent.parent
 DSPATH = ROOT / "results" / "datasets.jsonl"
 
 
-def load_rows(include_real=True):
-    dirs = [ROOT / "data" / "it"]
+def load_rows(domain="it", include_real=True):
+    dirs = [ROOT / "data" / domain]
     if include_real:
-        dirs.append(ROOT / "data" / "real")
+        # IT's real corpus lives in data/real; every other domain keeps its own data/<domain>/real
+        # (mixing data/real into non-IT domains would contaminate with IT's PII/secret rows).
+        dirs.append(ROOT / "data" / "real" if domain == "it" else ROOT / "data" / domain / "real")
     splits, rows = {}, []
     for d in dirs:
         for sp in ("train", "val", "test"):
@@ -59,9 +61,10 @@ def main():
     ap.add_argument("--version", required=True, help="dataset version label, e.g. ds-v4")
     ap.add_argument("--note", default="")
     ap.add_argument("--no-real", action="store_true", help="synthetic only")
+    ap.add_argument("--domain", default="it")
     args = ap.parse_args()
 
-    rows, splits = load_rows(include_real=not args.no_real)
+    rows, splits = load_rows(domain=args.domain, include_real=not args.no_real)
     rec = dict(
         version=args.version,
         date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),

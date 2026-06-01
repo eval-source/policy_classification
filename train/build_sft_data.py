@@ -24,8 +24,16 @@ LABEL = {1: "TRIGGER", 0: "PASS"}
 
 def load(split, domain):
     rows = []
-    for sub in (domain, "real"):
-        fp = ROOT / "data" / sub / f"{split}.jsonl"
+    # domain synthetic split; plus that domain's REAL data if present.
+    # NOTE: data/real holds IT's real corpus, so only mix it for IT. Other domains use their own
+    # data/<domain>/real/ once a fetcher exists (none yet -> synthetic-only).
+    dirs = [ROOT / "data" / domain]
+    if domain == "it":
+        dirs.append(ROOT / "data" / "real")
+    else:
+        dirs.append(ROOT / "data" / domain / "real")  # per-domain real (if/when it exists)
+    for d in dirs:
+        fp = d / f"{split}.jsonl"
         if fp.exists():
             rows += [json.loads(l) for l in fp.open() if l.strip()]
     return rows

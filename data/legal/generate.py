@@ -148,51 +148,69 @@ NEG = [neg_eula, neg_news, neg_casual, neg_logistics]
 
 # --------------------------- counterfactual pairs ---------------------------
 
-def cf_boilerplate_vs_clause(rng, fmt):
-    pos = wrap(rng, fmt, "Confidentiality. Each party shall hold the other's Confidential Information "
-              "in strict confidence and not disclose it to third parties for five (5) years.", subject="NDA")
-    neg = wrap(rng, fmt, "By using our site you agree to keep your account password confidential. See "
-              "the Terms of Service for details.", subject="terms")
-    return pos, neg, "nda_confidentiality"
+# MINIMAL-EDIT counterfactuals: pos and neg share an IDENTICAL clause body; only the terse FRAME
+# differs, and that frame is the SOLE signal of negotiated/binding instrument (POSITIVE) vs a
+# policy-EXCLUDED context — public boilerplate (ToS/privacy), commentary, sample/template, textbook
+# example, or an unexecuted draft (NEGATIVE). The earlier CFs were too easy (frozen cf-spec 100)
+# because the pos/neg sentences were entirely different and the cues were loud ("EXECUTED", "blank
+# template — fill in [PARTY NAME]", "Law360 explains"). Sharing the binding-looking clause body and
+# leaving only a subtle frame is what makes these discriminative for a strong base model.
+
+_CLAUSES = [
+    ("the Receiving Party shall hold all Confidential Information in strict confidence and not "
+     "disclose it to any third party for five (5) years", "nda_confidentiality"),
+    ("the Supplier shall indemnify and hold the Client harmless against all third-party claims "
+     "arising from the Services", "indemnity_liability"),
+    ("the Processor shall notify the Controller within 24 hours of any personal-data breach",
+     "compliance_obligation"),
+    ("the Vendor shall maintain $5M in cyber-insurance and deliver a SOC 2 Type II report annually",
+     "contract"),
+    ("neither party shall solicit the other's employees for twelve (12) months after termination",
+     "contract"),
+    ("the Licensee shall not reverse-engineer, decompile, or disassemble the Software", "contract"),
+    ("each party's aggregate liability shall not exceed the fees paid in the prior twelve (12) months",
+     "indemnity_liability"),
+]
 
 
-def cf_template_vs_executed(rng, fmt):
+def _cap(s):
+    return s[0].upper() + s[1:]
+
+
+# POSITIVE frames — negotiated / executed / party-specific instrument
+_BIND_FRAMES = [
+    lambda c, p, k, n: f"Section {n}. {_cap(c)}.",
+    lambda c, p, k, n: f"Per our executed {k} with {p}, {c}.",
+    lambda c, p, k, n: f"Under the {k} we signed with {p}, {c}.",
+    lambda c, p, k, n: f"{_cap(c)}. Countersigned by both parties yesterday.",
+    lambda c, p, k, n: f"As agreed in the fully-executed {k}, {c}.",
+]
+# NEGATIVE frames — same clause body, policy-EXCLUDED context (each a defensible non-trigger).
+# Deliberately SUBTLE/descriptive: most don't name a category outright, so the model must infer
+# "this is describing a norm / quoting a reference / not yet executed" rather than key on a keyword.
+_NONBIND_FRAMES = [
+    lambda c, p, k, n: f"Most {k}s say {c}.",                       # describing the norm (commentary)
+    lambda c, p, k, n: f"In a typical deal, {c}.",                  # commentary
+    lambda c, p, k, n: f"For reference, the standard language: {c}.",   # quoting a reference, not the deal
+    lambda c, p, k, n: f"Our public Terms of Service note that {c}.",   # boilerplate
+    lambda c, p, k, n: f"Textbook example — {c}.",                  # educational
+    lambda c, p, k, n: f"Draft for discussion, nothing agreed yet: {c}.",  # unexecuted
+    lambda c, p, k, n: f"A blank {k} template includes: {c}.",      # template/sample
+]
+
+
+def _cf_pair(rng, fmt):
+    c, sub = rng.choice(_CLAUSES)
     p = rng.choice(PARTIES)
-    pos = wrap(rng, fmt, f"EXECUTED: This Agreement between {p} and Vendor, signed March 3, sets the "
-              f"indemnification cap at $2M and net-30 terms.", subject="signed contract")
-    neg = wrap(rng, fmt, "Here's a blank NDA template — fill in [PARTY NAME], [DATE], and [TERM] with "
-              "your own values before sending.", subject="template")
-    return pos, neg, "contract"
+    k = rng.choice(["MSA", "NDA", "SOW", "DPA", "Agreement"])
+    n = rng.randint(2, 14)
+    pos = wrap(rng, fmt, rng.choice(_BIND_FRAMES)(c, p, k, n), subject=k)
+    neg = wrap(rng, fmt, rng.choice(_NONBIND_FRAMES)(c, p, k, n), subject="for reference")
+    return pos, neg, sub
 
 
-def cf_clause_vs_news(rng, fmt):
-    p = rng.choice(PARTIES)
-    pos = wrap(rng, fmt, f"Indemnification: {p} shall defend and hold us harmless against third-party "
-              f"IP claims arising from the Software.", subject="indemnity")
-    neg = wrap(rng, fmt, f"Did you see? {p} lost an indemnification dispute in court last week — big "
-              f"news for the industry.", subject="news")
-    return pos, neg, "indemnity_liability"
-
-
-def cf_obligation_vs_casual(rng, fmt):
-    pos = wrap(rng, fmt, "We are contractually bound under the DPA to notify the controller within 24h "
-              "of a breach — that's an enforceable obligation.", subject="obligation")
-    neg = wrap(rng, fmt, "legally speaking we should probably notify them quickly if something happens, "
-              "but idk what the contract says exactly", subject="re: legal")
-    return pos, neg, "compliance_obligation"
-
-
-def cf_privileged_vs_commentary(rng, fmt):
-    p = rng.choice(PARTIES)
-    pos = wrap(rng, fmt, f"ATTORNEY-CLIENT PRIVILEGED: counsel's assessment of our litigation exposure "
-              f"in the {p} matter — do not forward.", subject="PRIVILEGED")
-    neg = wrap(rng, fmt, f"Interesting blog on how companies handle litigation exposure — general "
-              f"commentary, nothing specific to us.", subject="blog")
-    return pos, neg, "privilege_litigation"
-
-
-CF = [cf_boilerplate_vs_clause, cf_template_vs_executed, cf_clause_vs_news,
-      cf_obligation_vs_casual, cf_privileged_vs_commentary]
+# single parameterized family; variety comes from the random clause body + frame per draw
+CF = [_cf_pair]
 
 # --------------------------- near-boundary negatives ---------------------------
 
@@ -205,6 +223,11 @@ def near_boundary(rng, fmt):
         ("What's the difference between an MSA and an SOW? Studying for a contracts class.", "legal_news"),
         ("The legal team recommends everyone complete the annual compliance training by Friday.", "legal_dept_logistics"),
         ("Hot take: most EULAs are unreadable and nobody actually agrees to them meaningfully.", "casual_legal_reference"),
+        ("Blog tutorial: here's a sample indemnification clause you might see in an SOW, with notes "
+         "on what each part means. Educational only.", "legal_news"),
+        ("We promise to always protect your privacy and treat your data with respect.", "eula_tos_privacy"),
+        ("Quote from the court opinion: \"the parties shall bear their own costs\" — interesting "
+         "precedent, sharing for awareness.", "legal_news"),
     ])
     return wrap(rng, fmt, t, subject="fyi"), sub
 
@@ -367,11 +390,26 @@ def main():
     ap.add_argument("--nearbound", type=int, default=110)
     ap.add_argument("--casual", type=int, default=120)
     ap.add_argument("--noise-rate", type=float, default=0.4)
+    ap.add_argument("--pool", default=None,
+                    help="emit one UNSPLIT candidate-pool file (path) instead of train/val/test "
+                         "splits — for the co-evolution loop (rows keep their seed_id for later "
+                         "leakage-safe splitting)")
     args = ap.parse_args()
     easy = args.easy if args.easy is not None else (700 if args.variant == "v0" else 480)
     sizes = dict(easy=easy, cf_pairs=args.cf_pairs, intent=args.intent,
                  nearbound=args.nearbound, casual=args.casual)
     rows = build(args.variant, args.seed, sizes, args.noise_rate)
+
+    if args.pool:
+        outp = Path(args.pool)
+        outp.parent.mkdir(parents=True, exist_ok=True)
+        with outp.open("w") as f:
+            for r in rows:
+                f.write(json.dumps(r) + "\n")
+        pos = sum(r["label"] for r in rows)
+        print(f"Pool: wrote {len(rows)} rows ({pos} pos / {len(rows)-pos} neg) -> {outp}")
+        return
+
     splits = split_by_seed(rows, args.seed)
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     for name, items in splits.items():
