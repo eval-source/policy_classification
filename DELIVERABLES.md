@@ -26,11 +26,16 @@ All numbers are reproducible (seeded generators + fetchers; eval over Tinker).
   model in alternating rounds, tracked against a **frozen anchor**. It works on Legal (→F1 0.99) and
   cleanly exposes *where and why* it doesn't on IT — the anchor is the load-bearing instrument.
 
-## 1. Datasets (`data/it/generate.py`, `data/it/fetch_real.py`)
+## 1. Datasets — three domains (`data/<domain>/generate.py` + `fetch_real.py`)
 
-Domain chosen: **IT** (most tractable — literal secrets are regex-anchorable, in/out scope concrete).
-Leakage-safe splits by `seed_id` (counterfactual pairs + paraphrases never straddle splits; verified 0).
-Datasets are **gitignored** (reproducible from seeds; contain fake secret-format strings + real PII).
+All three domains share one scaffolding: a synthetic generator (positive/negative subcategories →
+**hard negatives** + **minimal-edit counterfactual pairs** + casual register + typo noise), a real-HF
+fetcher, leakage-safe `seed_id` splits (pairs/paraphrases never straddle splits; verified 0), and
+**gitignored** data (reproducible from seeds; fake secret-format strings + real PII/licensed content).
+**IT** is the deepest build (8 versions below); **Legal**/**Marketing** reuse it via the `domains/`
+registry + the `policy-domain` skill.
+
+### IT — most tractable (literal secrets are regex-anchorable; in/out scope concrete)
 
 | version | rows | what it added | frozen-model F1 |
 |---|---|---|---|
@@ -50,6 +55,15 @@ held fixed (not the model degrading — see `notes/log.md` on holding one axis f
 **Coverage note:** `secret_credential`, `access_control` have **no clean public HF source** (sensitive
 content isn't published) → they stay synthetic. Real data covers PII, support, code, infra, policy, email.
 
+### Legal & Marketing — same recipe, domain-specific classes + real corpora
+
+| domain | key synthetic families | real sources — pos / hard-neg / easy-neg | frozen F1 (synth → real) |
+|---|---|---|---|
+| **Legal** | NDA · contract/MSA/DPA · indemnity · privilege/litigation · compliance; **minimal-edit CFs** (a binding clause vs the *same clause* framed as ToS / blank template / unexecuted draft / textbook example) | LEDGAR clauses / unfair-ToS + privacy-policy + legislation + r/legaladvice / AG-news | synth **100 → 83** (hard CFs); real **93** |
+| **Marketing** | efficacy/competitive claim · pricing/promo · brand copy · press/PR; claim-vs-opinion CFs | Amazon product copy / customer reviews + Wikipedia + tweets / AG-news | synth **96**; real **37** (under-triggers) |
+
+Per-domain real-world transfer + cross-source generalization is §5; the automated harden↔train loop is §6.
+
 ## 2. Eval harness (`eval/run_eval.py`)
 
 One command → P/R/F1 + **specificity** per slice (subcategory · hardening · difficulty · format ·
@@ -62,7 +76,26 @@ Dataset Versions (with ablation tables) · Findings.
 **Mixed scoring stack** (per the brief): regex (literal secrets), LLM-judge (few-shot Qwen3.6-27B for
 scale; Claude for an independent gold check), human adjudication of disagreements.
 
-## 3. Trained models + ablation (headline: ds-v7, correctly-labeled data)
+## 3. Trained models + ablation
+
+### 3a. SFT and SFT→OPD across all three domains (`scripts/train_all.py`)
+
+Each domain trained base→SFT→OPD (few-shot Qwen3.6-27B teacher, 24 steps), eval'd on synthetic+real test
+(overall F1). All runs are in the dashboard (Results · per-domain sub-tabs, `dataset_version=<domain>-sftopd`):
+
+| domain | frozen | SFT | SFT+OPD | OPD verdict |
+|---|---|---|---|---|
+| **IT** | 74.9 | 77.5 | **85.5** | **OPD wins (+8.0)** — real-heavy eval, teacher's PII strength matches the student bottleneck |
+| **Legal** | 84.5 | **89.0** | 84.3 | **OPD hurts (−4.7)** — the teacher *shares* the minimal-edit-CF blind spot, so distilling it regresses the student |
+| **Marketing** | 71.8 | **98.7** | 85.7 | **OPD hurts (−13.0)** — SFT already near-ceiling; the fuzzy-boundary teacher is mediocre and drags the student down |
+
+**One sentence:** SFT is the reliable win everywhere (frozen→SFT: IT +2.6, Legal +4.5, Marketing **+26.9**);
+**OPD helps only on IT**, where the few-shot 27B teacher's PII strength genuinely exceeds the student on the
+eval's bottleneck. It *regresses* Legal (teacher shares the minimal-edit-CF blind spot) and Marketing (teacher
+is mediocre on the fuzzy boundary, dragging a near-ceiling SFT down 13 pts) — i.e. **don't distill a teacher
+that isn't better than your student.** Exactly the §4 OPD finding, now demonstrated across all three domains.
+
+### 3b. IT detail — ds-v7 (correctly-labeled data), the deepest ablation
 
 | model | overall F1 | real F1 | PII spec | counterfactual spec | cost/ex | when to ship |
 |---|---|---|---|---|---|---|
