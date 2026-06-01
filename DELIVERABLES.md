@@ -22,6 +22,9 @@ All numbers are reproducible (seeded generators + fetchers; eval over Tinker).
 - **Across all three domains, clean-synthetic F1 does not predict real-world transfer** — and
   synthetic-only SFT can *regress* it. The reliable lever is training on data that matches the
   deployment distribution (incl. the real hard-negative/positive classes). See §5.
+- **An automated, oracle-gated benchmark↔model co-evolution loop** (§6) hardens the data and trains the
+  model in alternating rounds, tracked against a **frozen anchor**. It works on Legal (→F1 0.99) and
+  cleanly exposes *where and why* it doesn't on IT — the anchor is the load-bearing instrument.
 
 ## 1. Datasets (`data/it/generate.py`, `data/it/fetch_real.py`)
 
@@ -153,7 +156,47 @@ PASS; executed/negotiated → TRIGGER). That drove frozen **F1 100→83, counter
 the IT counterfactual arc (48→95). Honest cost: the rubric-call legislation slice (gated out of training as
 low-confidence) *regressed* 100→60 after SFT — a real consequence of the confidence gate, surfaced not hidden.
 
-## 6. What I'd do next
+## 6. Adversarial benchmark co-evolution (a self-improving loop)
+
+The manual harden→train→recover arc (IT, then Legal §5) was automated into a **co-evolution loop**
+(`scripts/coevolve.py`, domain-parameterized; spec in `notes/coevolve_spec.md`; live in the dashboard's
+**Co-evolution** tab). It's adversarial-benchmark co-evolution (Dynabench/ANLI lineage, *not* a GAN):
+
+- **Three roles.** *Student* S (Qwen3.5-4B, trained); *Oracle* T (few-shot Qwen3.6-27B) used as a
+  **label/solvability gate**, not a discriminator; a **frozen anchor** (held-out, never changes) that
+  measures true progress — the anti-Goodhart instrument, exactly the original "constant ds-v7" idea.
+- **Per round:** mine a candidate pool → score with T and S → keep the **frontier = {T-correct ∧
+  S-wrong}** (hard-but-solvable; the T-gate discards mislabeled/ill-posed items) → train S on
+  base+frontier → re-measure on the frozen anchor → log/commit. Stops on convergence (frontier dries up)
+  or a kill guard (anchor F1 drop / recall collapse). `{T-wrong}` goes to a **human-queue** (the shared
+  blind spot, see below).
+
+**The loop self-corrects its own bias.** On Legal: round 0's frontier was *all-negative* (fixed
+over-triggering, anchor F1 90.7→98.3, but recall over-corrected 100→96.6); round 1 then mined an
+*all-positive* frontier (the exact under-trigger cases) and **recovered recall 96.6→99.5, F1→99.2** —
+the over→under alternation happened automatically. It converged when S surpassed the 27B oracle.
+
+**Three domains, three outcomes — and the frozen anchor distinguished them** (eval-on-mined-frames was
+F1 1.0 *everywhere*, i.e. every run looked like a win; only the anchor told the truth):
+
+| domain | oracle−student gap | frontier shape | **anchor F1** | why |
+|---|---|---|---|---|
+| **Legal** | +0.15 | neg → then pos | 90.7 → **99.2** | synthetic≈real, sharp boundary, no shared blind spot → clean win |
+| **IT** | +0.11 | real over-trigger negs | 0.69 → **0.77** | real≠synthetic + PII **shared blind spot** + label noise → converges on the *synthetic* axis, real stuck |
+| **Marketing** | **+0.03** | 22 pos / 8 neg | **0.91** → 0.91 | fuzzy boundary → oracle barely beats student → little to mine, converges instantly, capped (P 0.84) |
+
+So **co-evolution effectiveness = f(oracle−student gap, synthetic≈real match, shared-blind-spot)**.
+Real-dominated mining on IT (re-run) only nudged precision 0.57→0.64 *within training variance* — i.e.
+the IT bottleneck is the **oracle + labels, not the mining distribution** (a falsified hypothesis).
+
+**Cross-family oracle breaks the teacher ceiling.** The same-family 27B *shares* the student's blind
+spots, so it can't gate them (they pile up in the human-queue: ~35–47 per round). Using **Claude as a
+different-family oracle** on Legal's human-queue: it agreed with gold **46/46** (confirming the labels
+were right and the Qwen errors were a real *family* blind spot), **rescued 41** examples into the
+frontier, and after training the student scored **100% vs the 27B's 81%** on those held-out frames —
+concretely surpassing the same-family teacher. (Scripting this needs an Anthropic key; done by hand.)
+
+## 7. What I'd do next
 
 - **Mixed-objective OPD** (KL-to-teacher on real + SFT/self-anchor on counterfactual) for a single
   dominant model.
@@ -168,7 +211,7 @@ low-confidence) *regressed* 100→60 after SFT — a real consequence of the con
 (Explicitly-named brief items still open — unified vs. per-policy model, multi-label overlap, calibration,
 held-out *policies*, sub-clause decomposition, scale/rank/threshold sweeps — are catalogued in §7.)
 
-## 7. Scope — brief items I deliberately deferred (and why)
+## 8. Scope — brief items I deliberately deferred (and why)
 
 Honest coverage map against the brief. These are **explicitly named** and **not yet done** — chosen
 against the time budget, with the reasoning:
@@ -190,7 +233,7 @@ against the time budget, with the reasoning:
 - **Data-scale curve / LoRA-rank / decoding-threshold ablations** (Part 3 menu): held rank=32, greedy
   decode, single data size — not swept.
 
-## 8. Reproduce
+## 9. Reproduce
 
 ```bash
 python data/it/generate.py --variant v1 --seed 0        # synthetic
@@ -210,4 +253,9 @@ python train/build_sft_data.py --domain legal && python train/sft.py --name lega
 python eval/run_eval.py --data data/legal/real/test_balanced.jsonl --mode model \
     --model tinker://<ckpt> --domain legal --dataset-version legal-real-v1
 python scripts/supervisor.py --status                    # per-domain stage + next action
+
+# co-evolution loop (§6): mine -> oracle-gate -> train -> measure-on-frozen-anchor, per round
+python scripts/coevolve.py --domain legal --round 0 --student Qwen/Qwen3.5-4B --dry-run  # validate the gate
+python scripts/coevolve.py --domain legal --start-round 0 --student Qwen/Qwen3.5-4B --max-rounds 4
+# results -> results/coevolve_<domain>.jsonl  (dashboard: Co-evolution tab)
 ```
