@@ -7,6 +7,39 @@ the multi-domain transfer + cross-source + hardening work is §5. Full blow-by-b
 per-iteration observations are in the dashboard **Findings** tab (f001–f046, filterable by domain).
 All numbers are reproducible (seeded generators + fetchers; eval over Tinker).
 
+## Headline results
+
+**A trained model beats the frozen baseline in every domain** (overall F1, synthetic+real test):
+
+| domain | frozen Qwen3.5-4B | best trained model | lift |
+|---|---|---|---|
+| **IT** | 74.9 | **85.5** (SFT→OPD) | **+10.6** |
+| **Legal** | 84.5 | **89.0** (SFT) | **+4.5** |
+| **Marketing** | 71.8 | **98.7** (SFT) | **+26.9** |
+
+- **SFT is the reliable production win. OPD (on-policy distillation) is operating-point-dependent** — it helps
+  *only* when the teacher genuinely beats the student on the eval's bottleneck (**IT +8.0**); it *regresses*
+  **Legal (−4.7)** and **Marketing (−13.0)**, where SFT is already strong and the few-shot 27B teacher isn't
+  better. Rule: *don't distill a teacher that isn't better than your student.*
+
+- **Centerpiece — a GAN-style adversarial benchmark↔model co-evolution loop** (`scripts/coevolve.py`, §6). A
+  *generator* hardens the benchmark to defeat the current model while the model trains to beat it, round after
+  round, refereed by a **frozen anchor**. On **Legal it drove the anchor F1 90.7 → 99.2**, and the loop
+  *automatically alternated its attack* — round 0 mined an all-negative frontier (fixed over-triggering, recall
+  dipped 100→96.6); round 1 mined an all-positive frontier (recovered recall →99.5) — then converged when the
+  student surpassed the teacher. Unlike a GAN the "discriminator" is a few-shot 27B **label/solvability oracle**,
+  so the adversary's hard examples stay *correctly labeled* (the central failure mode, contained); and a
+  **different-family Claude oracle** rescued 41 examples the same-family teacher couldn't, after which the
+  student **beat that teacher 100% vs 81%** on held-out frames — breaking the same-family teacher ceiling.
+
+- **The frozen anchor is the load-bearing instrument.** Across all three domains every co-evolution run looked
+  like a win on its own mined data (F1 1.0), but only the anchor told the truth: **clean win on Legal (0.99),
+  oracle/label-bound on IT (0.77), fuzzy-capped on Marketing (0.91)**.
+
+- **Clean-synthetic F1 does not predict real-world transfer** (all 3 domains): synthetic-only SFT *regressed*
+  real Legal and missed real Marketing until the real hard classes were in training. **Label quality moves the
+  headline metric** — a regex+judge+human audit (κ=0.906) fixed systematic IT label errors.
+
 ## TL;DR
 
 - **The benchmark, not the model, was the early bottleneck.** A frozen Qwen3.5-4B scores **F1 98** on
@@ -193,7 +226,12 @@ low-confidence) *regressed* 100→60 after SFT — a real consequence of the con
 
 The manual harden→train→recover arc (IT, then Legal §5) was automated into a **co-evolution loop**
 (`scripts/coevolve.py`, domain-parameterized; spec in `notes/coevolve_spec.md`; live in the dashboard's
-**Co-evolution** tab). It's adversarial-benchmark co-evolution (Dynabench/ANLI lineage, *not* a GAN):
+**Co-evolution** tab). It's a **GAN-style adversarial loop** (Dynabench/ANLI lineage): a *generator* hardens
+the benchmark to defeat the current model, the model trains to beat it, repeat to an equilibrium. Two
+deliberate departures from a literal GAN — both load-bearing: (1) the "discriminator" is a few-shot 27B
+**label/solvability oracle**, not a learned critic, so the adversary's hard examples stay *correctly labeled*
+(without this gate the adversary wins trivially with mislabeled noise); (2) it's gradient-free **selection**
+(mine → oracle-gate → train), not backprop through a generator.
 
 - **Three roles.** *Student* S (Qwen3.5-4B, trained); *Oracle* T (few-shot Qwen3.6-27B) used as a
   **label/solvability gate**, not a discriminator; a **frozen anchor** (held-out, never changes) that
