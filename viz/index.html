@@ -2,18 +2,29 @@
 <html lang="en"><head><meta charset="utf-8">
 <title>Policy Classification — dashboard</title>
 <style>
-  :root { --bg:#0f1115; --panel:#181b22; --fg:#e6e6e6; --muted:#9aa4b2; --acc:#58a6ff; --pos:#3fb950; --neg:#f85149; --chip:#262b36; --warn:#d29922; }
+  :root { --bg:#0d0f14; --panel:#161a22; --panel2:#1b202a; --fg:#e8edf4; --muted:#93a0b4; --acc:#6cb6ff; --acc2:#a371f7; --pos:#3fb950; --neg:#f85149; --chip:#222834; --warn:#d29922; --radius:10px; --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.20); }
   * { box-sizing:border-box; }
-  body { margin:0; font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--fg); }
-  header { padding:14px 20px 0; border-bottom:1px solid #232833; position:sticky; top:0; background:var(--bg); z-index:10; }
-  .titlerow { display:flex; align-items:center; gap:16px; }
-  h1 { margin:0; font-size:18px; } .sub { color:var(--muted); font-size:13px; }
-  button { background:var(--panel); color:var(--fg); border:1px solid #2b313c; border-radius:6px; padding:6px 12px; font-size:13px; cursor:pointer; }
-  button:hover { border-color:var(--acc); }
-  .tabs { display:flex; gap:4px; margin-top:12px; }
-  .tab { padding:8px 16px; border:none; border-bottom:2px solid transparent; background:none; color:var(--muted); border-radius:0; }
+  body { margin:0; font:14px/1.6 ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif; background:radial-gradient(1100px 520px at 82% -12%, #19223342 0%, transparent 60%), var(--bg); color:var(--fg); -webkit-font-smoothing:antialiased; }
+  header { padding:16px 24px 0; border-bottom:1px solid #232a36; position:sticky; top:0; background:rgba(13,15,20,.82); backdrop-filter:saturate(140%) blur(10px); z-index:10; }
+  .titlerow { display:flex; align-items:center; gap:14px; }
+  h1 { margin:0; font-size:21px; font-weight:700; letter-spacing:-.3px; background:linear-gradient(90deg,#ffffff,#9fc4ff 55%,#c8a6ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sub { color:var(--muted); font-size:13px; }
+  button { background:var(--panel); color:var(--fg); border:1px solid #2b313c; border-radius:8px; padding:7px 13px; font-size:13px; cursor:pointer; transition:border-color .15s, background .15s; }
+  button:hover { border-color:var(--acc); background:var(--panel2); }
+  .tabs { display:flex; gap:2px; margin-top:14px; }
+  .tab { padding:9px 16px; border:none; border-bottom:2px solid transparent; background:none; color:var(--muted); border-radius:0; font-size:13.5px; font-weight:500; transition:color .15s; }
+  .tab:hover { color:var(--fg); }
   .tab.active { color:var(--fg); border-bottom-color:var(--acc); }
-  .tab-section { display:none; } .tab-section.active { display:block; }
+  .tab-section { display:none; } .tab-section.active { display:block; animation:fade .25s ease; }
+  @keyframes fade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+  /* hero KPI strip */
+  .kpis { display:flex; flex-wrap:wrap; gap:12px; margin:2px 0 22px; }
+  .kpi { background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid #2a313d; border-radius:14px; padding:12px 16px; min-width:150px; box-shadow:var(--shadow); }
+  .kpi .lab { font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
+  .kpi .big { font-size:24px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
+  .kpi .big .arrow { color:var(--muted); font-size:16px; font-weight:500; }
+  .kpi .delta { font-size:12.5px; margin-top:1px; }
+  .banner { background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid #2a313d; border-left:3px solid var(--warn); border-radius:10px; padding:12px 16px; color:var(--muted); margin:6px 0; }
   .main { padding:16px 20px; }
   .err { color:var(--neg); padding:16px; }
   table { border-collapse:collapse; width:100%; font-size:13px; }
@@ -65,11 +76,11 @@
   label.f { display:block; font-size:12px; color:var(--muted); margin:10px 0 3px; }
   select, input { width:100%; background:var(--panel); color:var(--fg); border:1px solid #2b313c; border-radius:5px; padding:6px 8px; font-size:13px; }
   .count { color:var(--muted); margin:0 0 12px; font-size:13px; }
-  .card { background:var(--panel); border:1px solid #232833; border-radius:8px; padding:12px 14px; margin-bottom:10px; }
+  .card { background:var(--panel); border:1px solid #232833; border-radius:var(--radius); padding:12px 14px; margin-bottom:10px; box-shadow:var(--shadow); }
   .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; align-items:center; }
   pre { margin:0; white-space:pre-wrap; word-break:break-word; font:12.5px/1.5 ui-monospace,Menlo,monospace; color:#d6deeb; }
   /* versions tab */
-  .vcard { background:var(--panel); border:1px solid #232833; border-radius:10px; padding:16px 18px; margin-bottom:16px; }
+  .vcard { background:var(--panel); border:1px solid #232833; border-radius:12px; padding:16px 18px; margin-bottom:16px; box-shadow:var(--shadow); }
   .vhead { display:flex; align-items:baseline; gap:12px; margin-bottom:10px; }
   .vlabel { font-size:16px; font-weight:600; }
   .vcols { display:grid; grid-template-columns:1fr 1fr 1.1fr; gap:18px; }
@@ -82,7 +93,9 @@
 <body>
 <header>
   <div class="titlerow">
-    <h1>Policy Classification</h1><div class="sub" id="hdrsub"></div>
+    <h1>Policy Classification</h1>
+    <div class="sub">Qwen3.5-4B · IT · Legal · Marketing</div>
+    <div class="sub" id="hdrsub" style="margin-left:6px"></div>
     <button onclick="loadAll()" style="margin-left:auto">↻ Reload</button>
   </div>
   <div class="tabs">
@@ -105,6 +118,7 @@
 
   <!-- ===================== RESULTS ===================== -->
   <section class="tab-section active" id="tab-results">
+    <div class="kpis" id="kpis"></div>
     <div class="trend" id="trend" style="margin:6px 0 22px"></div>
     <table id="rtbl"><thead><tr>
       <th data-k="iteration">#</th><th data-k="date">date</th><th data-k="dataset_version">dataset</th><th data-k="run_id">run id</th>
@@ -212,7 +226,25 @@ async function loadResults() {
     usage:s.usage||null, cost:(s.usage?s.usage.est_cost_usd:null), preds_file:s.preds_file||null,
   })));
   $('hdrsub').textContent = `${hist.length} iterations · ${RROWS.length} runs`;
+  populateKpis();
   renderResults();
+}
+// headline KPI cards: per-domain best trained F1 vs frozen (from the *-sftopd batch)
+function populateKpis(){
+  const host = $('kpis'); if (!host) return;
+  const cards = ['it', 'legal', 'marketing'].map(d => {
+    const rows = RROWS.filter(r => r.dataset_version === `${d}-sftopd`);
+    const frozen = rows.find(r => /frozen/i.test(r.note));
+    const trained = rows.filter(r => !/frozen/i.test(r.note) && r.f1 != null);
+    if (!frozen || !trained.length) return '';
+    const best = trained.reduce((a, b) => (b.f1 > a.f1 ? b : a));
+    const fz = 100 * frozen.f1, bf = 100 * best.f1, dl = bf - fz;
+    const cls = dl >= 0 ? 'delta-up' : 'delta-down';
+    return `<div class="kpi"><div class="lab">${d.toUpperCase()} · best F1</div>
+      <div class="big">${bf.toFixed(1)} <span class="arrow">↑ ${fz.toFixed(1)}</span></div>
+      <div class="delta ${cls}">${dl >= 0 ? '+' : ''}${dl.toFixed(1)} vs frozen · ${best.note.replace(/\s*\(.*\)/, '')}</div></div>`;
+  }).filter(Boolean).join('');
+  host.innerHTML = cards;
 }
 function cfgChips(c, sys){
   if (sys && sys.toLowerCase().includes('regex')) return `<span class="chip">regex (deterministic)</span>`;
@@ -258,7 +290,7 @@ async function loadExamples(i){
   if(!r.preds_file){ host.innerHTML='<div class="sub">No per-example predictions for this run (predates the feature — re-run to populate).</div>'; host.dataset.loaded='1'; return; }
   host.innerHTML='<div class="sub">loading examples…</div>';
   const recs=await getJsonl('../'+r.preds_file);
-  if(recs===null){ host.innerHTML=`<div class="sub">preds file not found: ${r.preds_file}</div>`; return; }
+  if(recs===null){ host.innerHTML=`<div class="banner">Per-example predictions aren’t published here (they include real-data text snippets). Available when running the dashboard locally.</div>`; return; }
   host.dataset.loaded='1';
   host._fail=recs.filter(x=>!x.correct); host._succ=recs.filter(x=>x.correct);
   host.innerHTML=`<div class="subtabs">
@@ -352,7 +384,15 @@ function dbars(title,rows,key,stacked){const g={};rows.forEach(r=>{const k=r[key
   const items=Object.entries(g).sort((a,b)=>b[1].n-a[1].n).map(([k,v])=>{if(stacked){const pp=100*v.pos/v.n;return `<div class="bar"><span class="lab" title="${k}">${k}</span><div class="stacked"><div class="fill pos" style="width:${pp}%"></div><div class="fill neg" style="width:${100-pp}%"></div></div><span class="num">${v.pos}/${v.n-v.pos}</span></div>`;}return `<div class="bar"><span class="lab" title="${k}">${k}</span><div class="track"><div class="fill" style="width:${100*v.n/max}%"></div></div><span class="num">${v.n}</span></div>`;}).join('');
   return `<div class="stat"><h3>${title}</h3>${items}</div>`;}
 function renderDataset(){const rows=dfiltered();
-  $('hdrsub') && null;
+  if(!DROWS.length){  // rows aren't published on a static host (real PII + licensed HF content)
+    $('count').textContent='';
+    $('stats').innerHTML='';
+    $('list').innerHTML='<div class="banner">📦 <b>Raw dataset rows aren’t published here.</b> '
+      +'They contain real PII and licensed Hugging Face content, so only metrics are hosted. '
+      +'Clone the repo and run <code>python data/&lt;domain&gt;/generate.py</code> + <code>fetch_real.py</code> '
+      +'to browse them locally. The <b>Dataset Versions</b> tab shows the composition/stats.</div>';
+    return;
+  }
   $('count').textContent=`${rows.length} / ${DROWS.length} rows shown · ${DROWS.filter(r=>r.label===1).length} pos / ${DROWS.filter(r=>r.label===0).length} neg`;
   $('list').innerHTML=rows.slice(0,1000).map(r=>`<div class="card"><div class="chips">
     <span class="chip mono">${r.domain||r._domain||''}</span>
