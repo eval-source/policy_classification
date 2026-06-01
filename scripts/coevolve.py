@@ -125,16 +125,18 @@ def real_rows():
     return out
 
 
-def mine(N, cf, easy, real_k):
+def mine(N, cfg):
     pool = CO / f"pool_r{N}.jsonl"
-    cmd = [PY, GEN, "--variant", "v1", "--seed", N, "--pool", pool, "--cf-pairs", cf, "--easy", easy]
+    cmd = [PY, GEN, "--variant", "v1", "--seed", N, "--pool", pool,
+           "--cf-pairs", cfg["cf"], "--easy", cfg["easy"], "--intent", cfg["intent"],
+           "--nearbound", cfg["nearbound"], "--casual", cfg["casual"]]
     if DOMAIN == "it":
-        cmd += ["--obf", 60]   # IT-only knob (obfuscation family)
+        cmd += ["--obf", cfg["obf"]]   # IT-only knob (obfuscation family)
     sh(cmd)
     rows = load(pool)
     real = real_rows()
     rng = random.Random(N); rng.shuffle(real)
-    rows += real[:real_k]
+    rows += real[:cfg["real"]]
     block = {norm(r["text"]) for r in (load(ANCHOR / "gold.jsonl") + load(ANCHOR / "crosssource.jsonl")
                                        + load(ACCUM_TRAIN) + load(ACCUM_EVAL))}
     seen, dd = set(), []
@@ -186,7 +188,7 @@ def commit(msg):
 
 def run_round(N, student, cfg, dry=False):
     print(f"\n{'#'*64}\n# [{DOMAIN}] ROUND {N}  (student = {student[:42]})\n{'#'*64}")
-    pool, rows = mine(N, cfg["cf"], cfg["easy"], cfg["real"])
+    pool, rows = mine(N, cfg)
     print(f"[mine] pool={len(rows)}")
     T = {r["id"]: r for r in score(pool, ORACLE, True, CO / f"preds_T_r{N}.jsonl")}
     S = {r["id"]: r for r in score(pool, student, False, CO / f"preds_S_r{N}.jsonl")}
@@ -248,10 +250,15 @@ def main():
     ap.add_argument("--cf", type=int, default=250)
     ap.add_argument("--easy", type=int, default=100)
     ap.add_argument("--real", type=int, default=120)
+    ap.add_argument("--intent", type=int, default=60)
+    ap.add_argument("--nearbound", type=int, default=90)
+    ap.add_argument("--casual", type=int, default=40)
+    ap.add_argument("--obf", type=int, default=60)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     configure(args.domain)
-    cfg = dict(cf=args.cf, easy=args.easy, real=args.real)
+    cfg = dict(cf=args.cf, easy=args.easy, real=args.real, intent=args.intent,
+               nearbound=args.nearbound, casual=args.casual, obf=args.obf)
 
     if args.dry_run:
         run_round(args.round if args.round is not None else args.start_round, args.student, cfg, dry=True)
