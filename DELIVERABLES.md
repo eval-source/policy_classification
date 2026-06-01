@@ -26,11 +26,16 @@ All numbers are reproducible (seeded generators + fetchers; eval over Tinker).
   model in alternating rounds, tracked against a **frozen anchor**. It works on Legal (→F1 0.99) and
   cleanly exposes *where and why* it doesn't on IT — the anchor is the load-bearing instrument.
 
-## 1. Datasets (`data/it/generate.py`, `data/it/fetch_real.py`)
+## 1. Datasets — three domains (`data/<domain>/generate.py` + `fetch_real.py`)
 
-Domain chosen: **IT** (most tractable — literal secrets are regex-anchorable, in/out scope concrete).
-Leakage-safe splits by `seed_id` (counterfactual pairs + paraphrases never straddle splits; verified 0).
-Datasets are **gitignored** (reproducible from seeds; contain fake secret-format strings + real PII).
+All three domains share one scaffolding: a synthetic generator (positive/negative subcategories →
+**hard negatives** + **minimal-edit counterfactual pairs** + casual register + typo noise), a real-HF
+fetcher, leakage-safe `seed_id` splits (pairs/paraphrases never straddle splits; verified 0), and
+**gitignored** data (reproducible from seeds; fake secret-format strings + real PII/licensed content).
+**IT** is the deepest build (8 versions below); **Legal**/**Marketing** reuse it via the `domains/`
+registry + the `policy-domain` skill.
+
+### IT — most tractable (literal secrets are regex-anchorable; in/out scope concrete)
 
 | version | rows | what it added | frozen-model F1 |
 |---|---|---|---|
@@ -49,6 +54,15 @@ held fixed (not the model degrading — see `notes/log.md` on holding one axis f
 
 **Coverage note:** `secret_credential`, `access_control` have **no clean public HF source** (sensitive
 content isn't published) → they stay synthetic. Real data covers PII, support, code, infra, policy, email.
+
+### Legal & Marketing — same recipe, domain-specific classes + real corpora
+
+| domain | key synthetic families | real sources — pos / hard-neg / easy-neg | frozen F1 (synth → real) |
+|---|---|---|---|
+| **Legal** | NDA · contract/MSA/DPA · indemnity · privilege/litigation · compliance; **minimal-edit CFs** (a binding clause vs the *same clause* framed as ToS / blank template / unexecuted draft / textbook example) | LEDGAR clauses / unfair-ToS + privacy-policy + legislation + r/legaladvice / AG-news | synth **100 → 83** (hard CFs); real **93** |
+| **Marketing** | efficacy/competitive claim · pricing/promo · brand copy · press/PR; claim-vs-opinion CFs | Amazon product copy / customer reviews + Wikipedia + tweets / AG-news | synth **96**; real **37** (under-triggers) |
+
+Per-domain real-world transfer + cross-source generalization is §5; the automated harden↔train loop is §6.
 
 ## 2. Eval harness (`eval/run_eval.py`)
 
