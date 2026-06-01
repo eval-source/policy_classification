@@ -20,16 +20,11 @@ docs/refs/*.pdf
 results/preds_*.jsonl
 results/preds_runs/
 
-# generated datasets: reproducible from the seeded generator, and they contain
-# secret-FORMAT strings (fake values) that trip GitHub push protection.
-# Reproduce with: python data/it/generate.py --variant v1 --seed 0
-data/it/*.jsonl
+# NOTE: datasets ARE published now (synthetic = ours; real = open HF sources — see DATA_SOURCES.md
+# for credits/licenses). Synthetic IT contains fake secret-FORMAT strings; regenerable via
+# data/it/generate.py. The real-password audit file below stays OUT.
 
-# real data fetched from HF: not redistributable (licenses + may contain PII).
-# Reproduce with: python data/it/fetch_real.py
-data/real/
-
-# SFT/training data (derived from gitignored datasets)
+# SFT/training data (derived; regenerable via train/build_sft_data.py)
 train/*.jsonl
 
 # training run artifacts (checkpoints are on Tinker; logs may echo fake-secret examples)
@@ -38,15 +33,7 @@ train/runs/
 # label-audit queue: contains real-data text snippets (PII / secrets)
 results/label_audit.jsonl
 
-# legal/marketing generated datasets (reproducible from seeds)
-data/legal/*.jsonl
-data/marketing/*.jsonl
-
-# real data fetched from HF for legal/marketing: not redistributable (licenses) — same policy
-# as data/real/. Reproduce with: python data/<domain>/fetch_real.py
-data/legal/real/
-data/marketing/real/
-
-# co-evolution: frozen anchor + per-round candidate pools (synthetic + real-derived), any domain
+# co-evolution: frozen anchor + per-round candidate pools (derived eval artifacts; regenerable) —
+# kept out to reduce clutter (the core train/val/test datasets ARE published)
 data/*/anchor/
 data/*/coevolve/
