@@ -76,7 +76,24 @@ Dataset Versions (with ablation tables) · Findings.
 **Mixed scoring stack** (per the brief): regex (literal secrets), LLM-judge (few-shot Qwen3.6-27B for
 scale; Claude for an independent gold check), human adjudication of disagreements.
 
-## 3. Trained models + ablation (headline: ds-v7, correctly-labeled data)
+## 3. Trained models + ablation
+
+### 3a. SFT and SFT→OPD across all three domains (`scripts/train_all.py`)
+
+Each domain trained base→SFT→OPD (few-shot Qwen3.6-27B teacher, 24 steps), eval'd on synthetic+real test
+(overall F1). All runs are in the dashboard (Results · per-domain sub-tabs, `dataset_version=<domain>-sftopd`):
+
+| domain | frozen | SFT | SFT+OPD | OPD verdict |
+|---|---|---|---|---|
+| **IT** | 74.9 | 77.5 | **85.5** | **OPD wins (+8.0)** — real-heavy eval, teacher's PII strength matches the student bottleneck |
+| **Legal** | 84.5 | **89.0** | 84.3 | **OPD hurts (−4.7)** — the teacher *shares* the minimal-edit-CF blind spot, so distilling it regresses the student |
+| **Marketing** | 71.8 | **98.7** | _OPD running_ | SFT near-ceiling (+27 over frozen); OPD low headroom (expect flat/slightly down, cf. Legal) |
+
+**One sentence:** SFT is the reliable win everywhere; **OPD is operating-point-dependent — it helps only when
+the teacher is genuinely better than the student on the eval's bottleneck** (IT/PII), and *regresses* when the
+teacher shares the student's blind spot (Legal CFs). Exactly the §4 OPD finding, now shown across all three.
+
+### 3b. IT detail — ds-v7 (correctly-labeled data), the deepest ablation
 
 | model | overall F1 | real F1 | PII spec | counterfactual spec | cost/ex | when to ship |
 |---|---|---|---|---|---|---|
