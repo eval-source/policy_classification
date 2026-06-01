@@ -46,3 +46,7 @@ data/marketing/*.jsonl
 # as data/real/. Reproduce with: python data/<domain>/fetch_real.py
 data/legal/real/
 data/marketing/real/
+
+# co-evolution pilot: frozen anchor + per-round candidate pools (synthetic + real-derived)
+data/legal/anchor/
+data/legal/coevolve/
