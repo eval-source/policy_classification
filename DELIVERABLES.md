@@ -1,9 +1,11 @@
 # Policy Classification — Deliverables Summary
 
-One-policy binary classification (does text **trigger** an IT-security policy?), built on **Qwen3.5-4B**
-via Tinker. This summarizes the datasets, eval harness, trained models, ablations, and conclusions.
-Full blow-by-blow is in `notes/log.md`; per-iteration observations are in the dashboard **Findings**
-tab (f001–f032). All numbers are reproducible (seeded generator + fetcher; eval over Tinker).
+Per-policy binary classification (does text **trigger** a natural-language policy?) across **three
+domains — IT, Legal, Marketing** — built on **Qwen3.5-4B** via Tinker. This summarizes the datasets,
+eval harness, trained models, ablations, and conclusions. The deepest single-domain build is IT (§1–4);
+the multi-domain transfer + cross-source + hardening work is §5. Full blow-by-blow is in `notes/log.md`;
+per-iteration observations are in the dashboard **Findings** tab (f001–f046, filterable by domain).
+All numbers are reproducible (seeded generators + fetchers; eval over Tinker).
 
 ## TL;DR
 
@@ -139,6 +141,18 @@ held-out **movie-review specificity 73→93** and cross-source **F1 87.1→97.1*
 with recall held at 99 and only a small same-source cost (98.7→95.9). For fuzzy-boundary policies,
 **negative-distribution breadth is the lever for cross-source robustness** — more than positive coverage.
 
+**Hardening a benchmark when the base model is already strong (Legal).** Frozen Legal sat at F1 100
+(synthetic) / 93–95 (real). Adding *more* confusable real web negatives (privacy-policy prose, r/legaladvice
+commentary, even sentence-level statutory "shall" obligations from billsum) **did not move it** — the base
+model rejects all of them correctly (statute/advice/news specificity ~100); its grasp of "negotiated
+binding instrument vs not" is semantic, not surface (f044). The lever that worked was **minimal-edit
+synthetic counterfactuals**: an identical binding-looking clause body distinguished only by a terse frame
+mapping to the policy's exclusions ("Most MSAs say…", "For reference…", unexecuted draft, blank template →
+PASS; executed/negotiated → TRIGGER). That drove frozen **F1 100→83, counterfactual specificity 100→22**
+(f045) — and **SFT on the hard distribution recovered it to F1 99.3 / cf-spec 97.2** (f046), reproducing
+the IT counterfactual arc (48→95). Honest cost: the rubric-call legislation slice (gated out of training as
+low-confidence) *regressed* 100→60 after SFT — a real consequence of the confidence gate, surfaced not hidden.
+
 ## 6. What I'd do next
 
 - **Mixed-objective OPD** (KL-to-teacher on real + SFT/self-anchor on counterfactual) for a single
@@ -149,14 +163,34 @@ with recall held at 99 and only a small same-source cost (98.7→95.9). For fuzz
   over-triggered on unseen negatives (87.1), and broadening the negative training distribution recovered
   it to 97.1 (held-out movie-review spec 73→93). Remaining: a recall-tunable threshold / precision gate
   per operating point for the fuzzy-boundary domain, and a cross-source probe with a new *positive* source.
-- **Held-out-*policy* generalization** (Part 2's open axis): train on IT, eval on an unseen IT-adjacent
-  policy to separate "learned the format" from "learned the semantics."
-- **Extend to Legal + Marketing** domains — **done** (§5); both reuse the IT recipe via `domains/` + the
-  `policy-domain` skill, and the autonomous supervisor (`scripts/supervisor.py`) drove them to completion.
-- **Calibration + per-domain operating points** (IT: precision-favoring to avoid alert fatigue).
 - **Confirm Tinker prices** (`config/tinker_prices.json` is a placeholder) for calibrated $ costs.
 
-## 6. Reproduce
+(Explicitly-named brief items still open — unified vs. per-policy model, multi-label overlap, calibration,
+held-out *policies*, sub-clause decomposition, scale/rank/threshold sweeps — are catalogued in §7.)
+
+## 7. Scope — brief items I deliberately deferred (and why)
+
+Honest coverage map against the brief. These are **explicitly named** and **not yet done** — chosen
+against the time budget, with the reasoning:
+
+- **Unified multi-policy model vs. per-policy LoRA adapters** (Part 3 mechanics). I built three separate
+  per-domain adapters but did not train/compare a single unified model. This is the highest-value missing
+  ablation and is directly runnable (all three domains' SFT data exists) — *next up.*
+- **Overlapping / multi-label policies** (Part 1): e.g. an NDA that pastes an API key triggers *both*
+  Legal-confidentiality and IT-secrets. Not tested; the current setup is one binary head per policy. Would
+  need a small dual-labeled probe set to measure interaction.
+- **Calibration + threshold sensitivity** (Part 2): the parser is label-only (TRIGGER/PASS), so there's no
+  probability to calibrate or threshold-sweep. Would require emitting/scoring logprobs or a verbalized
+  confidence, then a reliability plot per domain.
+- **Held-out *policies*** (Part 2): I measured generalization to held-out *examples* (and cross-source,
+  §5), which is the deployment-relevant axis here; I did *not* build a leave-one-policy-out eval (train on
+  IT+Legal, test on Marketing zero-shot) to separate "learned the format" from "learned the semantics."
+- **Policy sub-clause decomposition** (Part 1, optional): labels are at the whole-text level, not per
+  sub-clause.
+- **Data-scale curve / LoRA-rank / decoding-threshold ablations** (Part 3 menu): held rank=32, greedy
+  decode, single data size — not swept.
+
+## 8. Reproduce
 
 ```bash
 python data/it/generate.py --variant v1 --seed 0        # synthetic
