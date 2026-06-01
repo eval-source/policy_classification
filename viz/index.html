@@ -90,6 +90,7 @@
     <button class="tab" data-tab="dataset">Dataset</button>
     <button class="tab" data-tab="datasets">Dataset Versions</button>
     <button class="tab" data-tab="findings">Findings</button>
+    <button class="tab" data-tab="coevolve">Co-evolution</button>
   </div>
   <div class="domtabs" id="domtabs">
     <button class="domtab active" data-dom="all">All domains</button>
@@ -136,6 +137,12 @@
   <section class="tab-section" id="tab-datasets">
     <div class="sub" style="margin-bottom:12px">Dataset versions (ds-vX) = the data composition. Each card shows composition + diff vs the previous dataset version, and an <b>ablation table</b> of the iterations (models) run against it — hold the data fixed, vary the model.</div>
     <div id="datasets"></div>
+  </section>
+
+  <!-- ===================== CO-EVOLUTION ===================== -->
+  <section class="tab-section" id="tab-coevolve">
+    <div class="sub" style="margin-bottom:12px">Adversarial benchmark co-evolution (<code>scripts/coevolve.py</code>): each round mines examples the student fails but a few-shot 27B oracle solves, trains on them, and re-measures on a <b>frozen anchor</b>. Progress is real only if <b>anchor F1</b> climbs while the <b>gap</b> (oracle−student) closes. Reads <code>results/coevolve_&lt;domain&gt;.jsonl</code>.</div>
+    <div id="coevolve"></div>
   </section>
 
   <!-- ===================== FINDINGS ===================== -->
@@ -187,6 +194,7 @@ document.querySelectorAll('.domtab').forEach(b=>b.onclick=async()=>{
   await loadDataset();   // reloads the rows for the selected domain (or all)
   loadDatasets();
   loadFindings();
+  loadCoevolve();
 });
 
 /* ================= RESULTS ================= */
@@ -444,8 +452,54 @@ async function loadFindings(){
   $('findings').innerHTML = html;
 }
 
+/* ================= CO-EVOLUTION ================= */
+function coevSpark(rows){
+  const xs = rows.map(r => r.anchor_f1).filter(v => v != null);
+  if (xs.length < 2) return '';
+  const W = 220, H = 40, pad = 6, n = xs.length;
+  const lo = Math.min(...xs, 0.5), hi = Math.max(...xs, 1.0);
+  const x = i => pad + (W - 2 * pad) * (n > 1 ? i / (n - 1) : 0.5);
+  const y = v => H - pad - (H - 2 * pad) * ((v - lo) / (hi - lo || 1));
+  const pts = xs.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+  const dots = xs.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3" fill="#3fb950"/>`).join('');
+  return `<svg width="${W}" height="${H}" style="vertical-align:middle"><polyline points="${pts.join(' ')}" fill="none" stroke="#3fb950" stroke-width="2"/>${dots}</svg>`;
+}
+function coevCard(label, rows){
+  const g = v => v == null ? '–' : (v >= 0 ? '+' : '') + v.toFixed(3);
+  const tr = rows.map(r => `<tr>
+      <td>r${r.round}</td>
+      <td class="num">${g(r.gap)}</td>
+      <td class="num">${r.frontier ?? '–'}</td><td class="num">${r.frontier_pos ?? '–'}</td>
+      <td class="num">${r.human_queue ?? '–'}</td>
+      <td class="num f1">${pct(r.anchor_f1)}</td><td class="num">${pct(r.anchor_precision)}</td><td class="num">${pct(r.anchor_recall)}</td>
+      <td class="num">${pct(r.eval_hard_f1)}</td></tr>`).join('');
+  const fs = rows.filter(r => r.anchor_f1 != null);
+  const trend = fs.length ? `anchor F1 ${pct(fs[0].anchor_f1)} → <b>${pct(fs[fs.length-1].anchor_f1)}</b>` : '';
+  return `<div class="vcard"><div class="vhead"><span class="vlabel">${label}</span>
+      <span class="sub">${rows.length} round(s) · ${trend}</span><span style="margin-left:auto">${coevSpark(rows)}</span></div>
+    <table class="ablation"><tr><th>round</th><th class="num" title="acc(oracle)−acc(student)">gap</th>
+      <th class="num">frontier</th><th class="num" title="positive frontier examples">pos</th>
+      <th class="num" title="oracle-wrong / shared blind spot">human-Q</th>
+      <th class="num">anchor F1</th><th class="num">P</th><th class="num">R</th>
+      <th class="num" title="held-out hard eval">eval-hard F1</th></tr>${tr}</table></div>`;
+}
+async function loadCoevolve(){
+  const doms = CURRENT_DOMAIN === 'all' ? ['legal', 'it', 'marketing'] : [CURRENT_DOMAIN];
+  let html = '';
+  for (const d of doms){
+    const files = [[`coevolve_${d}`, d.toUpperCase()]];
+    if (d === 'it') files.push(['coevolve_it_synthmine', 'IT (synthetic-mining, archived)']);
+    for (const [fname, label] of files){
+      const rows = await getJsonl('../results/' + fname + '.jsonl');
+      if (rows && rows.length) html += coevCard(label, rows);
+    }
+  }
+  $('coevolve').innerHTML = html ||
+    `<div class="sub">No co-evolution runs for <b>${CURRENT_DOMAIN}</b>. Run: <code>python scripts/coevolve.py --domain ${CURRENT_DOMAIN === 'all' ? '&lt;domain&gt;' : CURRENT_DOMAIN} --start-round 0 --student Qwen/Qwen3.5-4B</code></div>`;
+}
+
 /* ---------------- boot ---------------- */
-async function loadAll(){ $('err').style.display='none'; await loadResults(); await loadDataset(); await loadDatasets(); await loadFindings(); }
+async function loadAll(){ $('err').style.display='none'; await loadResults(); await loadDataset(); await loadDatasets(); await loadFindings(); await loadCoevolve(); }
 loadAll();
 </script>
 </body></html>
