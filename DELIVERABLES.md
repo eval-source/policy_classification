@@ -87,11 +87,13 @@ Each domain trained base→SFT→OPD (few-shot Qwen3.6-27B teacher, 24 steps), e
 |---|---|---|---|---|
 | **IT** | 74.9 | 77.5 | **85.5** | **OPD wins (+8.0)** — real-heavy eval, teacher's PII strength matches the student bottleneck |
 | **Legal** | 84.5 | **89.0** | 84.3 | **OPD hurts (−4.7)** — the teacher *shares* the minimal-edit-CF blind spot, so distilling it regresses the student |
-| **Marketing** | 71.8 | **98.7** | _OPD running_ | SFT near-ceiling (+27 over frozen); OPD low headroom (expect flat/slightly down, cf. Legal) |
+| **Marketing** | 71.8 | **98.7** | 85.7 | **OPD hurts (−13.0)** — SFT already near-ceiling; the fuzzy-boundary teacher is mediocre and drags the student down |
 
-**One sentence:** SFT is the reliable win everywhere; **OPD is operating-point-dependent — it helps only when
-the teacher is genuinely better than the student on the eval's bottleneck** (IT/PII), and *regresses* when the
-teacher shares the student's blind spot (Legal CFs). Exactly the §4 OPD finding, now shown across all three.
+**One sentence:** SFT is the reliable win everywhere (frozen→SFT: IT +2.6, Legal +4.5, Marketing **+26.9**);
+**OPD helps only on IT**, where the few-shot 27B teacher's PII strength genuinely exceeds the student on the
+eval's bottleneck. It *regresses* Legal (teacher shares the minimal-edit-CF blind spot) and Marketing (teacher
+is mediocre on the fuzzy boundary, dragging a near-ceiling SFT down 13 pts) — i.e. **don't distill a teacher
+that isn't better than your student.** Exactly the §4 OPD finding, now demonstrated across all three domains.
 
 ### 3b. IT detail — ds-v7 (correctly-labeled data), the deepest ablation
 
